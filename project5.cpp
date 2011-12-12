@@ -115,6 +115,12 @@ static shared_ptr<SgRbtNode> g_skyNode, g_groundNode, g_ballNode;
 static shared_ptr<SgRbtNode> g_currentCameraNode;
 static shared_ptr<SgRbtNode> g_currentPickedRbtNode;
 
+static const Cvec3 g_gravity(0, -0.5, 0);  // gravity vector
+static double g_timeStep = 0.02;
+static double g_numStepsPerFrame = 20;
+static double g_damping = 0.96;
+static double g_stiffness = 10;
+static int g_simulationsPerSecond = 60;
 
 ///////////////// END OF G L O B A L S //////////////////////////////////////////////////
 
@@ -587,7 +593,7 @@ static void initScene() {
   g_groundNode->addChild(shared_ptr<SgGeometryShapeNode>(
                            new SgGeometryShapeNode(g_ground, Cvec3(0.1, 0.95, 0.1))));
 
-  g_ballNode.reset(new SgRbtNode(RigTForm(Cvec3(-2, 1, 0))));
+  g_ballNode.reset(new SgRbtNode(RigTForm(Cvec3(0, 1, 0))));
   g_ballNode->addChild(shared_ptr<SgGeometryShapeNode>
                        (new SgGeometryShapeNode(g_sphere, Cvec3(1.0, 0.0, 1.0))));
 

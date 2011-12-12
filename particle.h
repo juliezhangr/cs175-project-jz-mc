@@ -6,6 +6,9 @@
 
 #include "cvec.h"
 
+// using define or a dynamic vector instead?
+#define NUM_PARTICLES 1
+
 class ParticleSystem {
    Cvec3    m_x[NUM_PARTICLES];    // Current positions
    Cvec3    m_oldx[NUM_PARTICLES]; // Previous positions
@@ -16,7 +19,15 @@ public:
    void       TimeStep();
    ParticleSystem() {};
    ParticleSystem(const Cvec3& x, const Cvec3& ox, const Cvec3& g, 
-                  const float ts) :
+                  const float ts) {
+     for(int i = 0; i < NUM_PARTICLES; i++) {
+       m_x[i] = Cvec3(x[0], x[1], x[2]);
+       m_oldx[i]= Cvec3(ox[0], ox[1], ox[2]);
+       m_a[i] = Cvec3();
+     }
+     m_vGravity = g; 
+     m_fTimestep = ts;
+   };
 
 private:
    void       Verlet();
