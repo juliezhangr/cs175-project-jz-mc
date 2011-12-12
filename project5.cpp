@@ -18,6 +18,7 @@
 #endif
 
 #include <GL/glew.h>
+
 #ifdef __MAC__
 #   include <GLUT/glut.h>
 #else
