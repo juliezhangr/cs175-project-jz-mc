@@ -116,7 +116,7 @@ static shared_ptr<SgRbtNode> g_skyNode, g_groundNode, g_ballNode, g_boxNode;
 
 static shared_ptr<SgRbtNode> g_currentCameraNode;
 static shared_ptr<SgRbtNode> g_currentPickedRbtNode;
-std::vector<Particle> g_xs; // Particle vector
+std::vector<Particle> g_ps; // Particle vector
 
 static const Cvec3 g_gravity(0, -0.5, 0);  // gravity vector
 static double g_timeStep = 0.02;
@@ -293,6 +293,27 @@ static void pick() {
   checkGlErrors();
 }
 
+
+// New glut timer call back that perform dynamics simulation 
+// every g_simulationsPerSecond times per second
+static void particleSimulationCallback(int dontCare) {
+
+  
+
+  // schedule this to get called again
+  glutTimerFunc(1000/g_simulationsPerSecond, particleSimulationCallback, 0);
+  glutPostRedisplay(); // signal redisplaying
+}
+
+
+// New function that initialize the dynamics simulation
+static void initSimulation() {
+  
+  // Starts Ragdoll Physics simulation
+  particleSimulationCallback(0);
+}
+
+// --------------------
 static void reshape(const int w, const int h) {
   g_windowWidth = w;
   g_windowHeight = h;
