@@ -5,28 +5,39 @@
  */
 
 #include "cvec.h"
+#include <vector>
 
-// using define or a dynamic vector instead?
-#define NUM_PARTICLES 1
+
+using namespace std;
+using namespace std::tr1;
+
+class Particle {
+ public:
+  Cvec3    x_;    // Current positions
+  Cvec3    oldx_; // Previous positions
+  float    invm;     // inverse mass of particle
+
+ Particle(const Cvec3& x, const Cvec3& ox, const float invmass) :
+  x_(x[0], x[1], x[2]), oldx_(ox[0], ox[1], ox[2]) {
+    invm = invmass;
+  }
+};
+
 
 class ParticleSystem {
-   Cvec3    m_x[NUM_PARTICLES];    // Current positions
-   Cvec3    m_oldx[NUM_PARTICLES]; // Previous positions
-   Cvec3    m_a[NUM_PARTICLES];    // Force accumulators
-   Cvec3    m_vGravity;            // Gravity
-   float      m_fTimeStep;
+  vector<Particle> p_;     // Particle vector 
+  vector<Cvec3>    m_a;    // Force accumulators
+  Cvec3    m_vGravity;            // Gravity
+  float      m_fTimeStep;
+  int  NUM_PARTICLES;
 public:
    void       TimeStep();
-   ParticleSystem() {};
-   ParticleSystem(const Cvec3& x, const Cvec3& ox, const Cvec3& g, 
-                  const float ts) {
-     for(int i = 0; i < NUM_PARTICLES; i++) {
-       m_x[i] = Cvec3(x[0], x[1], x[2]);
-       m_oldx[i]= Cvec3(ox[0], ox[1], ox[2]);
-       m_a[i] = Cvec3();
-     }
+   ParticleSystem(vector<Particle> ps, 
+                  const Cvec3& g, const float ts) {
+     int NUM_PARTICLES = ps.size();
+     p_ = ps;
      m_vGravity = g; 
-     m_fTimestep = ts;
+     m_fTimeStep = ts;
    };
 
 private:
@@ -35,14 +46,15 @@ private:
    void       AccumulateForces();
 
 };
+
 // Verlet integration step
 void ParticleSystem::Verlet() {
    for(int i=0; i<NUM_PARTICLES; i++) {
-      Cvec3& x = m_x[i];
+      Cvec3& x = p_[i].x_;
       Cvec3 temp = x;
-      Cvec3& oldx = m_oldx[i];
+      Cvec3& oldx = p_[i].oldx_;
       Cvec3& a = m_a[i];
-      x += x-oldx+a*fTimeStep*fTimeStep;
+      x += x-oldx+a*m_fTimeStep*m_fTimeStep;
       oldx = temp;
    }
 }
@@ -68,24 +80,22 @@ struct Constraint {
       for(int j=0; j<NUM_ITERATIONS; j++) {
          for(int i=0; i<NUM_CONSTRAINTS; i++) {
          Constraint& c = m_constraints[i];
-         Cvec3& x1 = m_x[c.particleA];
-         Cvec3& x2 = m_x[c.particleB];
+         Cvec3& x1 = p_[c.particleA].x_;
+         Cvec3& x2 = p_[c.particleB].x_;
          Cvec3 delta = x2-x1;
          float deltalength = sqrt(delta*delta);
          float diff=(deltalength-c.restlength)/deltalength;
          x1 -= delta*0.5*diff;
          x2 += delta*0.5*diff;
       }
-// Pseudo-code to satisfy (C2) for different mass particles (invmass = 0 is immovable)
-delta = x2-x1;
-deltalength = sqrt(delta*delta);
-diff = (deltalength-restlength)
-      /(deltalength*(invmass1+invmass2));
-x1 -= invmass1*delta*diff;
-x2 += invmass2*delta*diff;
+      // Pseudo-code to satisfy (C2) for different mass particles (invmass = 0 is immovable)
+      delta = x2-x1;
+      deltalength = sqrt(delta*delta);
+      diff = (deltalength-restlength)
+      /(deltalength*(x1.invm + x2.invm));
+      x1 -= x1.invm*delta*diff;
+      x2 += x2.invm*delta*diff;
 
-      // Constrain one particle of the cloth to origo
-      m_x[0] = Cvec3(0,0,0);
    }
 }
 */
@@ -93,7 +103,7 @@ x2 += invmass2*delta*diff;
 // Implements particles in a box, no bouncing
 void ParticleSystem::SatisfyConstraints() {
    for(int i=0; i<NUM_PARTICLES; i++) { // For all particles
-      Cvec3& x = m_x[i];
+      Cvec3& x = p_[i].x_;
       x = vmin(vmax(x, Cvec3(-5,-5,-5)),
          Cvec3(5,5,5));
    }

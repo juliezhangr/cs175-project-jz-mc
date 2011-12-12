@@ -3,7 +3,7 @@
 
 #include <cmath>
 #include <cassert>
-
+#include <algorithm>
 
 static const double CS175_PI = 3.14159265358979323846264338327950288;
 static const double CS175_EPS = 1e-6;
@@ -103,6 +103,13 @@ public:
     return *this;
   }
 
+  Cvec& operator = (const Cvec& v) {
+    for (int i = 0; i < n; ++i) {
+      d_[i] = v[i];
+    }
+    return *this;
+  }
+
   Cvec operator + (const Cvec& v) const {
     return Cvec(*this) += v;
   }
@@ -156,6 +163,24 @@ inline Cvec<T, n> normalize(const Cvec<T,n>& v) {
 template<typename T, int n>
 inline Cvec<T, n> lerp(const Cvec<T, n>& v0, const Cvec<T, n>& v1, T t) {
   return v0 + (v1 - v0) * t;
+}
+
+template<typename T, int n>
+  inline Cvec<T, n> vmax(const Cvec<T, n>& v, const Cvec<T, n>& w) {
+  Cvec<T, n> r;
+  for (int i= 0; i< n; ++i) {
+    r[i] = max(v[i], w[i]);
+  }
+  return r;
+}
+
+template<typename T, int n>
+  inline Cvec<T, n> vmin(const Cvec<T, n>& v, const Cvec<T, n>& w) {
+  Cvec<T, n> r;
+  for (int i= 0; i< n; ++i) {
+    r[i] = min(v[i], w[i]);
+  }
+  return r;
 }
 
 // element of type double precision float

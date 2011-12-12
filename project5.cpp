@@ -38,6 +38,7 @@
 #include "asstcommon.h"
 #include "drawer.h"
 #include "picker.h"
+#include "particle.h"
 
 using namespace std;
 using namespace std::tr1;
@@ -115,6 +116,7 @@ static shared_ptr<SgRbtNode> g_skyNode, g_groundNode, g_ballNode, g_boxNode;
 
 static shared_ptr<SgRbtNode> g_currentCameraNode;
 static shared_ptr<SgRbtNode> g_currentPickedRbtNode;
+std::vector<Particle> g_xs; // Particle vector
 
 static const Cvec3 g_gravity(0, -0.5, 0);  // gravity vector
 static double g_timeStep = 0.02;
@@ -398,6 +400,14 @@ static void motion(const int x, const int y) {
 
   target->setRbt(doMtoOwrtA(M, target->getRbt(), A));
 
+  // OK, so motion will set the new RBT based on the rotation and translation movement
+  // of the mouse:
+ /*  TODO: 
+   * Before displaying, run the new scene through the ragdoll animation to
+   * display the correct gravity affected scene
+   */
+
+
   g_mouseClickX += dx;
   g_mouseClickY += dy;
   glutPostRedisplay();  // we always redraw if we changed the scene
@@ -600,7 +610,7 @@ static void initScene() {
 
   g_ballNode.reset(new SgRbtNode(RigTForm(Cvec3(0, 1, -1))));
   g_ballNode->addChild(shared_ptr<SgGeometryShapeNode>
-                       (new SgGeometryShapeNode(g_sphere, Cvec3(1.0, 0.0, 1.0))));
+                       (new SgGeometryShapeNode(g_cube, Cvec3(1.0, 0.0, 1.0))));
 
   g_boxNode.reset(new SgRbtNode(RigTForm(Cvec3(0, 0, 0))));
   g_boxNode->addChild(shared_ptr<SgGeometryShapeNode>
