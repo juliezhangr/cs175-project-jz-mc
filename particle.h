@@ -94,8 +94,8 @@ x2 += invmass2*delta*diff;
 void ParticleSystem::SatisfyConstraints() {
    for(int i=0; i<NUM_PARTICLES; i++) { // For all particles
       Cvec3& x = m_x[i];
-      x = vmin(vmax(x, Cvec3(0,0,0)),
-         Cvec3(10,10,0));
+      x = vmin(vmax(x, Cvec3(-5,-5,-5)),
+         Cvec3(5,5,5));
    }
 }
 /*

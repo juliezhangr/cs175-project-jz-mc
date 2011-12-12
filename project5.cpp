@@ -78,7 +78,7 @@ static int g_activeShader = 0;
 
 static SkyMode g_activeCameraFrame = WORLD_SKY;
 
-static bool g_displayArcball = true;
+static bool g_displayArcball = false;
 static double g_arcballRadius = 1.5;
 
 static bool g_pickingMode = false;
@@ -103,14 +103,14 @@ static vector<shared_ptr<ShaderState> > g_shaderStates; // our global shader sta
 // --------- Geometry
 
 // Vertex buffer and index buffer associated with the ground and cube geometry
-static shared_ptr<Geometry> g_ground, g_cube, g_sphere;
+static shared_ptr<Geometry> g_ground, g_cube, g_sphere, g_box;
 
 // --------- Scene
 
-static const Cvec3 g_light1(2.0, 3.0, 14.0), g_light2(-2, -3.0, -5.0);  // define two lights positions in world space
+static const Cvec3 g_light1(10.0, 10.0, 14.0), g_light2(-10, -10.0, -15.0);  // define two lights positions in world space
 
 static shared_ptr<SgRootNode> g_world;
-static shared_ptr<SgRbtNode> g_skyNode, g_groundNode, g_ballNode;
+static shared_ptr<SgRbtNode> g_skyNode, g_groundNode, g_ballNode, g_boxNode;
 
 static shared_ptr<SgRbtNode> g_currentCameraNode;
 static shared_ptr<SgRbtNode> g_currentPickedRbtNode;
@@ -147,6 +147,10 @@ static void initCubes() {
 
   makeCube(1, vtx.begin(), idx.begin());
   g_cube.reset(new Geometry(&vtx[0], &idx[0], vbLen, ibLen));
+
+  // large box
+  makeCube(10, vtx.begin(), idx.begin());
+  g_box.reset(new Geometry(&vtx[0], &idx[0], vbLen, ibLen));
 }
 
 static void initSphere() {
@@ -489,8 +493,8 @@ static void initGLState() {
   glClearDepth(0.);
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   glPixelStorei(GL_PACK_ALIGNMENT, 1);
-  glCullFace(GL_BACK);
-  glEnable(GL_CULL_FACE);
+  //glCullFace(GL_BACK);
+  //glEnable(GL_CULL_FACE);
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_GREATER);
   glReadBuffer(GL_BACK);
@@ -587,16 +591,20 @@ static void constructRobot(shared_ptr<SgTransformNode> base, const Cvec3& color)
 static void initScene() {
   g_world.reset(new SgRootNode());
 
-  g_skyNode.reset(new SgRbtNode(RigTForm(Cvec3(0.0, 0.25, 4.0))));
+  g_skyNode.reset(new SgRbtNode(RigTForm(Cvec3(0, 0.5, 4))));
 
-  g_groundNode.reset(new SgRbtNode());
-  g_groundNode->addChild(shared_ptr<SgGeometryShapeNode>(
-                           new SgGeometryShapeNode(g_ground, Cvec3(0.1, 0.95, 0.1))));
+  //g_groundNode.reset(new SgRbtNode());
+  //g_groundNode->addChild(shared_ptr<SgGeometryShapeNode>(
+  //                         new SgGeometryShapeNode(g_ground, Cvec3(0.1, 0.95, 0.1))));
 
-  g_ballNode.reset(new SgRbtNode(RigTForm(Cvec3(0, 1, 0))));
+  g_ballNode.reset(new SgRbtNode(RigTForm(Cvec3(0, 1, -1))));
   g_ballNode->addChild(shared_ptr<SgGeometryShapeNode>
                        (new SgGeometryShapeNode(g_sphere, Cvec3(1.0, 0.0, 1.0))));
 
+  g_boxNode.reset(new SgRbtNode(RigTForm(Cvec3(0, 0, 0))));
+  g_boxNode->addChild(shared_ptr<SgGeometryShapeNode>
+                      (new SgGeometryShapeNode(g_box, (Cvec3(1, 1, 1)))));
+  
 
   // g_robot1Node.reset(new SgRbtNode(RigTForm(Cvec3(-2, 1, 0))));
   //g_robot2Node.reset(new SgRbtNode(RigTForm(Cvec3(2, 1, 0))));
@@ -605,8 +613,9 @@ static void initScene() {
   //constructRobot(g_robot2Node, Cvec3(0, 0, 1)); // a Blue robot
 
   g_world->addChild(g_skyNode);
-  g_world->addChild(g_groundNode);
+  //g_world->addChild(g_groundNode);
   g_world->addChild(g_ballNode);
+  g_world->addChild(g_boxNode);
 
   g_currentCameraNode = g_skyNode;
 }
