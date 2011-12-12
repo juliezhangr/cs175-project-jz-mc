@@ -55,8 +55,18 @@ public:
     return children_[i];
   }
 
+  virtual int getParticleId() {
+    return particleId_;
+  }
+
+  void setParticleId(int particleId) {
+    particleId_ = particleId;
+  }
+
+
 private:
   std::vector<std::tr1::shared_ptr<SgNode> > children_;
+  int particleId_;
 };
 
 //
