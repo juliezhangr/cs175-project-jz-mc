@@ -120,7 +120,7 @@ static shared_ptr<SgRbtNode> g_robot1Node;
 static shared_ptr<SgRbtNode> g_currentCameraNode;
 static shared_ptr<SgRbtNode> g_currentPickedRbtNode;
 
-static const Cvec3 g_gravity(0, -2.0, 0);  // gravity vector
+static const Cvec3 g_gravity(0, -3.0, 0);  // gravity vector
 static double g_timeStep = 0.02;
 static double g_numStepsPerFrame = 20;
 static double g_damping = 0.96;
@@ -650,7 +650,7 @@ static void physicsTimerCallback(int ms) {
   
   // update the scene graph
   RigTForm r = RigTForm();
-  vector<Particle> p = g_particleSystem->getParticleVector();
+  vector<Particle>& p = g_particleSystem->getParticleVector(); // TODO: This should return a reference
   Poser poser = Poser(r, p);
   g_ragdollNode->accept(poser);
 
@@ -671,7 +671,33 @@ static void initParticles() {
   Articulator articulator = Articulator(RigTForm(), g_particles, g_constraints);
   g_ragdollNode->accept(articulator);
 
+  // HACK - HOLD HEAD IN PLACE
+  /*g_particles[9].invm = 0;*/
+
   g_particleSystem.reset(new ParticleSystem(g_particles, g_constraints, g_gravity, 1. / (float) g_ragdollFramesPerSecond));
+
+  // HACK
+  /*int corners[4] = {1,3,7,5};
+  for(int i = 0; i < 4; i++) {
+    g_particleSystem->constrain(corners[i], corners[(i + 1) % 4]);
+  }
+  */
+  
+  g_particleSystem->constrain(0,1);
+  g_particleSystem->constrain(1,2);
+  g_particleSystem->constrain(0,3);
+  g_particleSystem->constrain(3,4);
+  g_particleSystem->constrain(0,5);
+  g_particleSystem->constrain(5,6);
+  g_particleSystem->constrain(0,7);
+  g_particleSystem->constrain(7,8);
+  g_particleSystem->constrain(0,9);
+
+  g_particleSystem->constrain(3,5);
+  g_particleSystem->constrain(5,7);
+  g_particleSystem->constrain(1,7);
+  g_particleSystem->constrain(3,7);
+  g_particleSystem->constrain(1,5);
 
   printf("Num Particles: %d\nNum Constraints: %d\n", (int) g_particles.size(), (int)g_constraints.size());
 
