@@ -120,7 +120,7 @@ static shared_ptr<SgRbtNode> g_robot1Node;
 static shared_ptr<SgRbtNode> g_currentCameraNode;
 static shared_ptr<SgRbtNode> g_currentPickedRbtNode;
 
-static const Cvec3 g_gravity(0, -0.5, 0);  // gravity vector
+static const Cvec3 g_gravity(0, -1, 0);  // gravity vector
 static double g_timeStep = 0.02;
 static double g_numStepsPerFrame = 20;
 static double g_damping = 0.96;
@@ -128,7 +128,7 @@ static double g_stiffness = 10;
 static int g_simulationsPerSecond = 60;
 
 // --------- Ragdoll Physics
-vector<Particle> g_particles; // vector of particles
+//vector<Particle> g_particles; // vector of particles
 bool g_ragdollEnabled = true;
 int g_ragdollFramesPerSecond = 60;
 static shared_ptr<ParticleSystem> g_particleSystem;
@@ -301,27 +301,6 @@ static void pick() {
   checkGlErrors();
 }
 
-
-// New glut timer call back that perform dynamics simulation 
-// every g_simulationsPerSecond times per second
-static void particleSimulationCallback(int dontCare) {
-
-  
-
-  // schedule this to get called again
-  glutTimerFunc(1000/g_simulationsPerSecond, particleSimulationCallback, 0);
-  glutPostRedisplay(); // signal redisplaying
-}
-
-
-// New function that initialize the dynamics simulation
-static void initSimulation() {
-  
-  // Starts Ragdoll Physics simulation
-  particleSimulationCallback(0);
-}
-
-// --------------------
 static void reshape(const int w, const int h) {
   g_windowWidth = w;
   g_windowHeight = h;
@@ -667,7 +646,9 @@ static void physicsTimerCallback(int ms) {
   g_particleSystem->TimeStep();
   
   // update the scene graph
-  Poser poser = Poser(RigTForm(), g_particleSystem->getParticleVector());
+  RigTForm r = RigTForm();
+  vector<Particle> p = g_particleSystem->getParticleVector();
+  Poser poser = Poser(r, p);
   g_ballNode->accept(poser);
 
   if (g_ragdollEnabled) {
@@ -681,12 +662,11 @@ static void initParticles() {
   // articulator traverses scene graph and creates a new particle for each transform node
   // also establishes mapping from transform nodes to particles
   
-  // TODO: particles vector doesn't really need to be global...
-  g_particles.clear();
-  Articulator articulator = Articulator(RigTForm(), g_particles);
+  vector<Particle> particles;
+  Articulator articulator = Articulator(RigTForm(), particles);
   g_ballNode->accept(articulator);
 
-  g_particleSystem.reset(new ParticleSystem(g_particles, g_gravity, 1. / (float) g_ragdollFramesPerSecond));
+  g_particleSystem.reset(new ParticleSystem(particles, g_gravity, 1. / (float) g_ragdollFramesPerSecond));
 
   physicsTimerCallback(0);
 }
