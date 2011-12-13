@@ -10,33 +10,55 @@
 class Articulator : public SgNodeVisitor {
 protected:
   vector<Particle>& particles_;
+  vector<Constraint>& constraints_;
   std::vector<RigTForm> rbtStack_;
+  std::vector<int> particleStack_;
   int idCounter_;
 public:
-  Articulator(const RigTForm& initialRbt, vector<Particle>& particleVec) 
+  Articulator(const RigTForm& initialRbt, vector<Particle>& particleVec,
+                                          vector<Constraint>& constraintVec) 
     : particles_(particleVec),
+      constraints_(constraintVec),
       rbtStack_(1, initialRbt),
+      particleStack_(),
       idCounter_(0) {}
 
   virtual bool visit(SgTransformNode& node) {
-    rbtStack_.push_back(rbtStack_.back() * node.getRbt());
+    RigTForm lastRbt = rbtStack_.back();
+    RigTForm currRbt = lastRbt * node.getRbt();
+
+    rbtStack_.push_back(currRbt);
     
     // create new particle
-    Cvec3 currPos = rbtStack_.back().getTranslation();
-    float invmass = 1;
+    Cvec3 lastPos = lastRbt.getTranslation();
+    Cvec3 currPos = currRbt.getTranslation();
 
-    assert(particles_.size() == idCounter_); // DEBUG
+    float invmass = 1;
     particles_.push_back(Particle(currPos, currPos, invmass));
     
     // remember this node's particle
     node.setParticleId(idCounter_);
-    idCounter_++;
+    
+    Constraint newConstraint;
+    // if not first particle, create a constraint with this as destination
+    if(particleStack_.size() > 0) {
+      newConstraint.particleA = particleStack_.back();
+      newConstraint.particleB = idCounter_;
+      
+      // calculate the initial distance between these particles
+      newConstraint.restLength = sqrt(norm2(lastPos - currPos));
 
+      constraints_.push_back(newConstraint);
+    }
+    
+    particleStack_.push_back(idCounter_);
+    idCounter_++;
     return true;
   }
 
   virtual bool postVisit(SgTransformNode& node) {
     rbtStack_.pop_back();
+    particleStack_.pop_back();
     return true;
   }
 
