@@ -163,7 +163,7 @@ struct Geometry {
     }
   }
 
-};
+;
 
 //---------------------------------------------------
 // Scene graph shape node that references a geometry
