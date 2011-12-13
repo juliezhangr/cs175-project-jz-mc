@@ -79,9 +79,17 @@ void ParticleSystem::Verlet() {
 // This function should accumulate forces for each particle
 void ParticleSystem::AccumulateForces()
 {
+  Cvec3 curr_a;
+
   // All particles are influenced by gravity
   for(int i=0; i < num_particles; i++) {
-    m_a.push_back(m_vGravity);
+    // calculate acceleration of particle given forces
+    curr_a = Cvec3(0,0,0);
+
+    // acceleration due to gravity is constant unless particle is immovable
+    curr_a += (p_[i].invm == 0 ? Cvec3(0,0,0) : m_vGravity);
+
+    m_a.push_back(curr_a);
   }
 }
 
