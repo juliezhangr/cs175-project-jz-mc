@@ -40,16 +40,17 @@ public:
     node.setParticleId(idCounter_);
     
     Constraint newConstraint;
-    // if not first particle, create a constraint with this as destination
-    if(particleStack_.size() > 0) {
-      newConstraint.particleA = particleStack_.back();
-      newConstraint.particleB = idCounter_;
-      
-      // calculate the initial distance between these particles
-      newConstraint.restLength = sqrt(norm2(lastPos - currPos));
 
-      constraints_.push_back(newConstraint);
-    }
+    // if not first particle, create a constraint with this as destination
+    //if(particleStack_.size() > 0) {
+    //  newConstraint.particleA = particleStack_.back();
+    //  newConstraint.particleB = idCounter_;
+    //  
+    //  // calculate the initial distance between these particles
+    //  newConstraint.restLength = sqrt(abs(dot(lastPos - currPos, lastPos - currPos)));
+
+    //  constraints_.push_back(newConstraint);
+    //}
     
     particleStack_.push_back(idCounter_);
     idCounter_++;

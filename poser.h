@@ -9,7 +9,7 @@
 
 class Poser : public SgNodeVisitor {
 protected:
-  vector<Particle> particles_;
+  vector<Particle>& particles_;
   std::vector<RigTForm> rbtStack_;
   int idCounter_;
 public:

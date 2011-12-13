@@ -33,39 +33,37 @@ struct Constraint {
 };
 
 class ParticleSystem {
-  vector<Particle>   p_;              // Particle vector 
-  vector<Cvec3>      m_a;             // Force accumulators
-  vector<Constraint> m_constraints;   // Constraints
-  Cvec3              m_vGravity;      // Gravity
-  float              m_fTimeStep;     // Duration of timestep
-  int                num_particles;   // Pre-processed count of particles
-  int                num_constraints; // Pre-processed count of constraints
-  int                num_iterations;  // Pre-defined number of iterations in 'relaxation' process.
+  vector<Particle>    p_;              // Particle vector 
+  vector<Cvec3>       m_a;             // Force accumulators
+  vector<Constraint>  m_constraints;   // Constraints
+  Cvec3               m_vGravity;      // Gravity
+  float               m_fTimeStep;     // Duration of timestep
+  int                 num_iterations;  // Pre-defined number of iterations in 'relaxation' process.
 
 public:   
-   void             TimeStep();
-   vector<Particle> getParticleVector();
-   void             Relax();
+  void               constrain(int particleIdA, int particleIdB);
+  void               TimeStep();
+  vector<Particle>&  getParticleVector();
 
-   ParticleSystem(vector<Particle> ps, vector<Constraint> cs, const Cvec3& g, const float ts) {
-     num_particles = ps.size();
-     p_ = ps;
-     m_constraints = cs;
-     m_vGravity = g; 
-     m_fTimeStep = ts;
-     num_iterations = 10;
-   };
+  ParticleSystem(vector<Particle> ps, vector<Constraint> cs, const Cvec3& g, const float ts) {
+    p_ = ps;
+    m_constraints = cs;
+    m_vGravity = g; 
+    m_fTimeStep = ts;
+    num_iterations = 100;
+  };
 
 private:
-   void Verlet();
-   void SatisfyConstraints();
-   void AccumulateForces();
+  void Verlet();
+  void SatisfyConstraints();
+  void AccumulateForces();
 
 };
 
 // Verlet integration step
 void ParticleSystem::Verlet() {
-  for(int i=0; i < num_particles; i++) {
+  int num_particles = p_.size();
+  for(int i=0; i < num_particles - 1; i++) {
     Cvec3& x = p_[i].x_;
     Cvec3& oldx = p_[i].oldx_;
 
@@ -81,6 +79,7 @@ void ParticleSystem::Verlet() {
 void ParticleSystem::AccumulateForces()
 {
   Cvec3 curr_a;
+  int num_particles = p_.size();
 
   // All particles are influenced by gravity
   for(int i=0; i < num_particles; i++) {
@@ -94,32 +93,34 @@ void ParticleSystem::AccumulateForces()
   }
 }
 
-// C(2) - Satisfies constraints in between particles
-void ParticleSystem::Relax() {
-  for(int j = 0; j < num_iterations; j++) {
-    for(int i=0; i < num_constraints; i++) {
-      Constraint& c = m_constraints[i];
+
+void ParticleSystem::SatisfyConstraints() {
+  int num_particles = p_.size();
+  int num_constraints = m_constraints.size();
+
+  // iteratively converge upon state satisfying constraints
+  for (int i = 0; i < num_iterations; i++) {
+
+    // ensure contained in box
+    for(int j = 0; j < num_particles; j++) {
+      Cvec3& x = p_[j].x_;
+      x = vmin(vmax(x, Cvec3(-5,-5,-5)),
+               Cvec3(5,5,5));
+    }
+
+    // ensure distance constraints are satisfied
+    for(int k = 0; k < num_constraints; k++) {
+      Constraint& c = m_constraints[k];
       Cvec3& x1 = p_[c.particleA].x_;
       Cvec3& x2 = p_[c.particleB].x_;
-      Cvec3 delta = x2-x1;
-      float deltalength = sqrt(dot(delta, delta));
-      float diff=(deltalength-c.restLength)/
-        (deltalength*(p_[c.particleA].invm + p_[c.particleB].invm));
-      x1 -= delta*diff*(p_[c.particleA].invm);
-      x2 += delta*diff*(p_[c.particleB].invm);
+      Cvec3 delta = x1 - x2;
+      float deltaLength = sqrt(dot(delta, delta));
+      float diff = (deltaLength - c.restLength) / deltaLength;
+      
+      x1 -= delta * p_[c.particleA].invm * 0.2 * diff;
+      x2 += delta * p_[c.particleB].invm * 0.2 * diff;
     }
   }
-}
-
-// Implements particles in a box, no bouncing
-void ParticleSystem::SatisfyConstraints() {
-  // C(1) keeps within box
-  for(int i=0; i< num_particles; i++) { // For all particles
-    Cvec3& x = p_[i].x_;
-    x = vmin(vmax(x, Cvec3(-5,-5,-5)),
-             Cvec3(5,5,5));
-  }
-  Relax();
 }
 
 /*
@@ -145,13 +146,21 @@ void ParticleSystem::SatisfyConstraints() {
 }
 */
 
+void ParticleSystem::constrain(int particleAId, int particleBId) {
+  Constraint constraint;
+  constraint.particleA = particleAId;
+  constraint.particleB = particleBId;
+  constraint.restLength = sqrt(abs(dot(p_[constraint.particleA].x_ - p_[constraint.particleB].x_, p_[constraint.particleA].x_ - p_[constraint.particleB].x_)));
+  m_constraints.push_back(constraint);
+}
+
 void ParticleSystem::TimeStep() {
   AccumulateForces();
   Verlet();
   SatisfyConstraints();
 }
 
-vector<Particle> ParticleSystem::getParticleVector() {
+vector<Particle>& ParticleSystem::getParticleVector() {
   return p_;
 }
 

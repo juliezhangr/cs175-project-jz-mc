@@ -63,7 +63,6 @@ public:
     particleId_ = particleId;
   }
 
-
 private:
   std::vector<std::tr1::shared_ptr<SgNode> > children_;
   int particleId_;
