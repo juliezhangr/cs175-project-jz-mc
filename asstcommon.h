@@ -110,10 +110,14 @@ struct VertexPN {
 struct Geometry {
   GlBufferObject vbo, ibo;
   int vboLen, iboLen;
+  VertexPN *vs;
+  unsigned short *is;
 
   Geometry(VertexPN *vtx, unsigned short *idx, int vboLen, int iboLen) {
     this->vboLen = vboLen;
     this->iboLen = iboLen;
+    this->vs = vtx;
+    this->is = idx;
 
     // Now create the VBO and IBO
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -149,11 +153,14 @@ struct Geometry {
   ibLen = iboLen;
   }
 
-  void getIbo() {
-
+  unsigned short * getIbo() {
+    return is;
   }
 
-  void getVbo() {
+  void getVbo(Cvec3 vertices[]) {
+    for (int i = 0; i<vboLen; ++i) {
+      vertices[i] = Cvec3((double)vs[i].p[0], (double)vs[i].p[1], (double)vs[i].p[2]);
+    }
   }
 
 };
