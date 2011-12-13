@@ -39,6 +39,8 @@
 #include "drawer.h"
 #include "picker.h"
 #include "particle.h"
+#include "articulator.h"
+#include "poser.h"
 
 using namespace std;
 using namespace std::tr1;
@@ -113,10 +115,10 @@ static const Cvec3 g_light1(10.0, 10.0, 14.0), g_light2(-10, -10.0, -15.0);  // 
 
 static shared_ptr<SgRootNode> g_world;
 static shared_ptr<SgRbtNode> g_skyNode, g_groundNode, g_ballNode, g_boxNode;
+static shared_ptr<SgRbtNode> g_robot1Node;
 
 static shared_ptr<SgRbtNode> g_currentCameraNode;
 static shared_ptr<SgRbtNode> g_currentPickedRbtNode;
-std::vector<Particle> g_ps; // Particle vector
 
 static const Cvec3 g_gravity(0, -0.5, 0);  // gravity vector
 static double g_timeStep = 0.02;
@@ -124,6 +126,12 @@ static double g_numStepsPerFrame = 20;
 static double g_damping = 0.96;
 static double g_stiffness = 10;
 static int g_simulationsPerSecond = 60;
+
+// --------- Ragdoll Physics
+vector<Particle> g_particles; // vector of particles
+bool g_ragdollEnabled = true;
+int g_ragdollFramesPerSecond = 60;
+static shared_ptr<ParticleSystem> g_particleSystem;
 
 ///////////////// END OF G L O B A L S //////////////////////////////////////////////////
 
@@ -638,18 +646,49 @@ static void initScene() {
                       (new SgGeometryShapeNode(g_box, (Cvec3(1, 1, 1)))));
   
 
-  // g_robot1Node.reset(new SgRbtNode(RigTForm(Cvec3(-2, 1, 0))));
+  g_robot1Node.reset(new SgRbtNode(RigTForm(Cvec3(-2, 1, 0))));
   //g_robot2Node.reset(new SgRbtNode(RigTForm(Cvec3(2, 1, 0))));
 
-  //constructRobot(g_robot1Node, Cvec3(1, 0, 0)); // a Red robot
+  constructRobot(g_robot1Node, Cvec3(1, 0, 0)); // a Red robot
   //constructRobot(g_robot2Node, Cvec3(0, 0, 1)); // a Blue robot
 
   g_world->addChild(g_skyNode);
   //g_world->addChild(g_groundNode);
   g_world->addChild(g_ballNode);
   g_world->addChild(g_boxNode);
+  
+  g_world->addChild(g_robot1Node);
 
   g_currentCameraNode = g_skyNode;
+}
+
+static void physicsTimerCallback(int ms) {
+  // update the particles
+  g_particleSystem->TimeStep();
+  
+  // update the scene graph
+  Poser poser = Poser(RigTForm(), g_particleSystem->getParticleVector());
+  g_ballNode->accept(poser);
+
+  if (g_ragdollEnabled) {
+    glutTimerFunc(1000/g_ragdollFramesPerSecond, physicsTimerCallback, ms + 1000/g_ragdollFramesPerSecond);
+  }
+
+  display();
+}
+
+static void initParticles() {  
+  // articulator traverses scene graph and creates a new particle for each transform node
+  // also establishes mapping from transform nodes to particles
+  
+  // TODO: particles vector doesn't really need to be global...
+  g_particles.clear();
+  Articulator articulator = Articulator(RigTForm(), g_particles);
+  g_ballNode->accept(articulator);
+
+  g_particleSystem.reset(new ParticleSystem(g_particles, g_gravity, 1. / (float) g_ragdollFramesPerSecond));
+
+  physicsTimerCallback(0);
 }
 
 int main(int argc, char * argv[]) {
@@ -668,6 +707,7 @@ int main(int argc, char * argv[]) {
     initShaders();
     initGeometry();
     initScene();
+    initParticles();
 
     glutMainLoop();
     return 0;
