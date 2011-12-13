@@ -143,6 +143,19 @@ struct Geometry {
     safe_glDisableVertexAttribArray(curSS.h_aPosition);
     safe_glDisableVertexAttribArray(curSS.h_aNormal);
   }
+
+  void getVboIbolen(int& vbLen, int& ibLen) {
+  vbLen = vboLen;
+  ibLen = iboLen;
+  }
+
+  void getIbo() {
+
+  }
+
+  void getVbo() {
+  }
+
 };
 
 //---------------------------------------------------
@@ -173,6 +186,10 @@ public:
   virtual void draw(const ShaderState& curSS) {
     safe_glUniform3f(curSS.h_uColor, color_[0], color_[1], color_[2]);
     geometry_->draw(curSS);
+  }
+
+  std::tr1::shared_ptr<Geometry> getGeometry() {
+    return geometry_;
   }
 };
 

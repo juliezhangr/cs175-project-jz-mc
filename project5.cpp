@@ -304,27 +304,6 @@ static void pick() {
   checkGlErrors();
 }
 
-
-// New glut timer call back that perform dynamics simulation 
-// every g_simulationsPerSecond times per second
-static void particleSimulationCallback(int dontCare) {
-
-  
-
-  // schedule this to get called again
-  glutTimerFunc(1000/g_simulationsPerSecond, particleSimulationCallback, 0);
-  glutPostRedisplay(); // signal redisplaying
-}
-
-
-// New function that initialize the dynamics simulation
-static void initSimulation() {
-  
-  // Starts Ragdoll Physics simulation
-  particleSimulationCallback(0);
-}
-
-// --------------------
 static void reshape(const int w, const int h) {
   g_windowWidth = w;
   g_windowHeight = h;
@@ -670,7 +649,9 @@ static void physicsTimerCallback(int ms) {
   g_particleSystem->TimeStep();
   
   // update the scene graph
-  Poser poser = Poser(RigTForm(), g_particleSystem->getParticleVector());
+  RigTForm r = RigTForm();
+  vector<Particle> p = g_particleSystem->getParticleVector();
+  Poser poser = Poser(r, p);
   g_ragdollNode->accept(poser);
 
   if (g_ragdollEnabled) {
@@ -692,7 +673,7 @@ static void initParticles() {
 
   g_particleSystem.reset(new ParticleSystem(g_particles, g_constraints, g_gravity, 1. / (float) g_ragdollFramesPerSecond));
 
-  printf("Num Particles: %d\nNum Constraints: %d\n", g_particles.size(), g_constraints.size());
+  printf("Num Particles: %d\nNum Constraints: %d\n", (int) g_particles.size(), (int)g_constraints.size());
 
   physicsTimerCallback(0);
 }
