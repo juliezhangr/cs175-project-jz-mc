@@ -294,7 +294,6 @@ inline Matrix4 linFact(const Matrix4& m) {
   }
   return r;
 }
-
-
+  
 #endif
 

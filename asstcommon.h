@@ -149,21 +149,18 @@ struct Geometry {
   }
 
   void getVboIbolen(int& vbLen, int& ibLen) {
-  vbLen = vboLen;
-  ibLen = iboLen;
+    vbLen = vboLen;
+    ibLen = iboLen;
   }
 
   unsigned short * getIbo() {
     return is;
   }
 
-  void getVbo(Cvec3 vertices[]) {
-    for (int i = 0; i<vboLen; ++i) {
-      vertices[i] = Cvec3((double)vs[i].p[0], (double)vs[i].p[1], (double)vs[i].p[2]);
-    }
+  VertexPN * getVbo() {
+    return vs;
   }
-
-;
+};
 
 //---------------------------------------------------
 // Scene graph shape node that references a geometry
@@ -172,6 +169,8 @@ class SgGeometryShapeNode : public SgShapeNode {
   std::tr1::shared_ptr<Geometry> geometry_;
   Matrix4 affineMatrix_;
   Cvec3 color_;
+  Cvec3 t_;
+  Cvec3 angles_;
 public:
   SgGeometryShapeNode(std::tr1::shared_ptr<Geometry> geometry,
                       const Cvec3& color,
@@ -180,6 +179,8 @@ public:
                       const Cvec3& scales = Cvec3(1, 1, 1))
     : geometry_(geometry)
     , color_(color)
+    , t_(translation)
+    , angles_(eulerAngles)
     , affineMatrix_(Matrix4::makeTranslation(translation) *
                     Matrix4::makeXRotation(eulerAngles[0]) *
                     Matrix4::makeYRotation(eulerAngles[1]) *
@@ -195,8 +196,16 @@ public:
     geometry_->draw(curSS);
   }
 
-  std::tr1::shared_ptr<Geometry> getGeometry() {
+  virtual std::tr1::shared_ptr<Geometry> getGeometry() {
     return geometry_;
+  }
+  
+  virtual Cvec3 getTranslation() {
+    return t_;
+  }
+  
+  virtual Cvec3 getAngles() {
+    return angles_;
   }
 };
 

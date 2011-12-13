@@ -14,13 +14,13 @@ struct GenericVertex {
   Cvec2f tex;
   Cvec3f tangent, binormal;
 
-  GenericVertex(
-    float x, float y, float z,
-    float nx, float ny, float nz,
-    float tu, float tv,
-    float tx, float ty, float tz,
-    float bx, float by, float bz)
-    : pos(x,y,z), normal(nx,ny,nz), tex(tu, tv), tangent(tx, ty, tz), binormal(bx, by, bz)
+GenericVertex(
+              float x, float y, float z,
+              float nx, float ny, float nz,
+              float tu, float tv,
+              float tx, float ty, float tz,
+              float bx, float by, float bz)
+: pos(x,y,z), normal(nx,ny,nz), tex(tu, tv), tangent(tx, ty, tz), binormal(bx, by, bz)
   {}
 };
 
@@ -31,15 +31,15 @@ inline void getCubeVbIbLen(int& vbLen, int& ibLen) {
 }
 
 template<typename VtxOutIter, typename IdxOutIter>
-void makeCube(float size, VtxOutIter vtxIter, IdxOutIter idxIter) {
+  void makeCube(float size, VtxOutIter vtxIter, IdxOutIter idxIter) {
   float h = size / 2.0;
-#define DEFV(x, y, z, nx, ny, nz, tu, tv) { \
-    *vtxIter = GenericVertex(x h, y h, z h, \
-                             nx, ny, nz, tu, tv, \
-                             tan[0], tan[1], tan[2], \
-                             bin[0], bin[1], bin[2]); \
-    ++vtxIter; \
-}
+#define DEFV(x, y, z, nx, ny, nz, tu, tv) {             \
+    *vtxIter = GenericVertex(x h, y h, z h,             \
+                             nx, ny, nz, tu, tv,        \
+                             tan[0], tan[1], tan[2],    \
+                             bin[0], bin[1], bin[2]);   \
+    ++vtxIter;                                          \
+  }
   Cvec3f tan(0, 1, 0), bin(0, 0, -1);
   DEFV(+, -, -, 1, 0, 0, 0, 0); // facing +X
   DEFV(+, +, -, 1, 0, 0, 1, 0);
@@ -101,7 +101,7 @@ inline void getSphereVbIbLen(int slices, int stacks, int& vbLen, int& ibLen) {
 }
 
 template<typename VtxOutIter, typename IdxOutIter>
-void makeSphere(float radius, int slices, int stacks, VtxOutIter vtxIter, IdxOutIter idxIter) {
+  void makeSphere(float radius, int slices, int stacks, VtxOutIter vtxIter, IdxOutIter idxIter) {
   using namespace std;
   assert(slices > 1);
   assert(stacks >= 2);
@@ -151,10 +151,10 @@ void makeSphere(float radius, int slices, int stacks, VtxOutIter vtxIter, IdxOut
       Cvec3f b = cross(t, n);
 
       *vtxIter = GenericVertex(
-        x * radius, y * radius, z * radius,
-        x, y, z,
-        1.0/slices*i, 1.0/stacks*(j+1),
-        t[0], t[1], t[2], b[0], b[1], b[2]);
+                               x * radius, y * radius, z * radius,
+                               x, y, z,
+                               1.0/slices*i, 1.0/stacks*(j+1),
+                               t[0], t[1], t[2], b[0], b[1], b[2]);
       ++vtxIter;
 
       if (j < stacks - 2) {

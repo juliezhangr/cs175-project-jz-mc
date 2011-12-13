@@ -549,7 +549,7 @@ static void constructRobot(shared_ptr<SgTransformNode> base, const Cvec3& color)
                TORSO_THICK = 0.25,
                TORSO_WIDTH = 1,
                HEAD_SIZE = 0.7;
-  const int NUM_JOINTS = 10,
+  const int NUM_JOINTS = 14,
             NUM_SHAPES = 10;
 
   struct JointDesc {
@@ -563,10 +563,14 @@ static void constructRobot(shared_ptr<SgTransformNode> base, const Cvec3& color)
     {0, -TORSO_WIDTH/2, TORSO_LEN/2, 0}, // upper left arm
     {1,  ARM_LEN, 0, 0}, // lower right arm
     {2, -ARM_LEN, 0, 0}, // lower left arm
+    {3, ARM_LEN, 0, 0}, // right hand
+    {4, -ARM_LEN, 0, 0}, // left hand
     {0, TORSO_WIDTH/2-LEG_THICK/2, -TORSO_LEN/2, 0}, // upper right leg
     {0, -TORSO_WIDTH/2+LEG_THICK/2, -TORSO_LEN/2, 0}, // upper left leg
     {5, 0, -LEG_LEN, 0}, // lower right leg
-    {6, 0, -LEG_LEN, 0}, // lower left
+    {6, 0, -LEG_LEN, 0}, // lower left leg
+    {9, 0, -LEG_LEN, 0}, // right foot
+    {10, 0, -LEG_LEN, 0}, // left foot
     {0, 0, TORSO_LEN/2, 0} // head
   };
 
