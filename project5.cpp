@@ -673,7 +673,7 @@ static void initParticles() {
 
   g_particleSystem.reset(new ParticleSystem(g_particles, g_constraints, g_gravity, 1. / (float) g_ragdollFramesPerSecond));
 
-  printf("Num Particles: %d\nNum Constraints: %d\n", g_particles.size(), g_constraints.size());
+  printf("Num Particles: %d\nNum Constraints: %d\n", (int) g_particles.size(), (int)g_constraints.size());
 
   physicsTimerCallback(0);
 }

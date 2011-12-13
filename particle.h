@@ -45,6 +45,7 @@ class ParticleSystem {
 public:   
    void             TimeStep();
    vector<Particle> getParticleVector();
+   void             Relax();
 
    ParticleSystem(vector<Particle> ps, vector<Constraint> cs, const Cvec3& g, const float ts) {
      num_particles = ps.size();
@@ -85,39 +86,32 @@ void ParticleSystem::AccumulateForces()
   }
 }
 
-// Assume that an array of constraints, m_constraints, exists
-/*
-void ParticleSystem::SatisfyConstraints() {
+// C(2) - Satisfies constraints in between particles
+void ParticleSystem::Relax() {
   for(int j = 0; j < num_iterations; j++) {
     for(int i=0; i < num_constraints; i++) {
       Constraint& c = m_constraints[i];
       Cvec3& x1 = p_[c.particleA].x_;
       Cvec3& x2 = p_[c.particleB].x_;
       Cvec3 delta = x2-x1;
-      float deltalength = sqrt(delta * delta);
-      float diff=(deltalength-c.restLength)/deltalength;
-      x1 -= delta*0.5*diff;
-      x2 += delta*0.5*diff;
+      float deltalength = sqrt(dot(delta, delta));
+      float diff=(deltalength-c.restLength)/
+        (deltalength*(p_[c.particleA].invm + p_[c.particleB].invm));
+      x1 -= delta*diff*(p_[c.particleA].invm);
+      x2 += delta*diff*(p_[c.particleB].invm);
     }
-    
-    // Pseudo-code to satisfy (C2) for different mass particles (invmass = 0 is immovable)
-    delta = x2-x1;
-    deltalength = sqrt(delta*delta);
-    diff = (deltalength-restLength)
-      /(deltalength*(x1.invm + x2.invm));
-    x1 -= x1.invm*delta*diff;
-    x2 += x2.invm*delta*diff;
   }
-}*/
-
+}
 
 // Implements particles in a box, no bouncing
 void ParticleSystem::SatisfyConstraints() {
+  // C(1) keeps within box
   for(int i=0; i< num_particles; i++) { // For all particles
     Cvec3& x = p_[i].x_;
     x = vmin(vmax(x, Cvec3(-5,-5,-5)),
              Cvec3(5,5,5));
   }
+  Relax();
 }
 
 /*
