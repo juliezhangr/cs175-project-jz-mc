@@ -120,7 +120,7 @@ static shared_ptr<SgRbtNode> g_robot1Node;
 static shared_ptr<SgRbtNode> g_currentCameraNode;
 static shared_ptr<SgRbtNode> g_currentPickedRbtNode;
 
-static const Cvec3 g_gravity(0, -1, 0);  // gravity vector
+static const Cvec3 g_gravity(0, -2.0, 0);  // gravity vector
 static double g_timeStep = 0.02;
 static double g_numStepsPerFrame = 20;
 static double g_damping = 0.96;
@@ -128,10 +128,13 @@ static double g_stiffness = 10;
 static int g_simulationsPerSecond = 60;
 
 // --------- Ragdoll Physics
-//vector<Particle> g_particles; // vector of particles
+vector<Particle> g_particles; // vector of particles
+vector<Constraint> g_constraints; // vector of constraints
 bool g_ragdollEnabled = true;
 int g_ragdollFramesPerSecond = 60;
 static shared_ptr<ParticleSystem> g_particleSystem;
+
+static shared_ptr<SgRbtNode>& g_ragdollNode = g_robot1Node;
 
 ///////////////// END OF G L O B A L S //////////////////////////////////////////////////
 
@@ -649,7 +652,7 @@ static void physicsTimerCallback(int ms) {
   RigTForm r = RigTForm();
   vector<Particle> p = g_particleSystem->getParticleVector();
   Poser poser = Poser(r, p);
-  g_ballNode->accept(poser);
+  g_ragdollNode->accept(poser);
 
   if (g_ragdollEnabled) {
     glutTimerFunc(1000/g_ragdollFramesPerSecond, physicsTimerCallback, ms + 1000/g_ragdollFramesPerSecond);
@@ -662,11 +665,15 @@ static void initParticles() {
   // articulator traverses scene graph and creates a new particle for each transform node
   // also establishes mapping from transform nodes to particles
   
-  vector<Particle> particles;
-  Articulator articulator = Articulator(RigTForm(), particles);
-  g_ballNode->accept(articulator);
+  // TODO: particles vector doesn't really need to be global... (neither does constraint vector)
+  g_particles.clear();
+  g_constraints.clear();
+  Articulator articulator = Articulator(RigTForm(), g_particles, g_constraints);
+  g_ragdollNode->accept(articulator);
 
-  g_particleSystem.reset(new ParticleSystem(particles, g_gravity, 1. / (float) g_ragdollFramesPerSecond));
+  g_particleSystem.reset(new ParticleSystem(g_particles, g_constraints, g_gravity, 1. / (float) g_ragdollFramesPerSecond));
+
+  printf("Num Particles: %d\nNum Constraints: %d\n", g_particles.size(), g_constraints.size());
 
   physicsTimerCallback(0);
 }
