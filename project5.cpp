@@ -704,8 +704,8 @@ static void initParticles() {
   g_particleSystem->constrain(1,7);
   g_particleSystem->constrain(3,7);
   g_particleSystem->constrain(1,5);
+  
   */
-
   printf("Num Particles: %d\nNum Constraints: %d\n", (int) g_particles.size(), (int)g_constraints.size());
  
   physicsTimerCallback(0);

@@ -110,14 +110,16 @@ struct VertexPN {
 struct Geometry {
   GlBufferObject vbo, ibo;
   int vboLen, iboLen;
-  VertexPN *vs;
-  unsigned short *is;
+  std::vector<VertexPN> vs;
+  std::vector<unsigned short> is;
 
   Geometry(VertexPN *vtx, unsigned short *idx, int vboLen, int iboLen) {
     this->vboLen = vboLen;
     this->iboLen = iboLen;
-    this->vs = vtx;
-    this->is = idx;
+    for (int i = 0; i < vboLen; ++i)
+      this->vs.push_back(vtx[i]);
+    for (int i = 0; i < iboLen; ++i)
+      this->is.push_back(idx[i]);
 
     // Now create the VBO and IBO
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
@@ -151,14 +153,15 @@ struct Geometry {
   void getVboIbolen(int& vbLen, int& ibLen) {
     vbLen = vboLen;
     ibLen = iboLen;
+    return;
   }
 
   unsigned short * getIbo() {
-    return is;
+    return &is[0];
   }
 
   VertexPN * getVbo() {
-    return vs;
+    return &vs[0];
   }
 };
 
@@ -181,6 +184,7 @@ public:
     : geometry_(geometry)
     , color_(color)
     , t_(translation)
+    , scale_(scales)
     , angles_(eulerAngles)
     , affineMatrix_(Matrix4::makeTranslation(translation) *
                     Matrix4::makeXRotation(eulerAngles[0]) *
