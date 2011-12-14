@@ -47,7 +47,7 @@ public:
 
   ParticleSystem(vector<Particle> ps, vector<Constraint> cs, const Cvec3& g, const float ts) {
     p_ = ps;
-    m_constraints = cs;
+    m_constraints = cs
     m_vGravity = g; 
     m_fTimeStep = ts;
     num_iterations = 50;
@@ -119,7 +119,7 @@ void ParticleSystem::SatisfyConstraints() {
       
       x1 -= delta * p_[c.particleA].invm * 0.2 * diff;
       x2 += delta * p_[c.particleB].invm * 0.2 * diff;
-      }
+    }
   }
 }
 

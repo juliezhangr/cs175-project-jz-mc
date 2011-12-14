@@ -73,6 +73,8 @@ public:
     // for each edge, should create a constraint
     shared_ptr<SgGeometryShapeNode> GeoPtr = 
       dynamic_pointer_cast<SgGeometryShapeNode>(shapeNode.shared_from_this());
+    // save parent particle id number
+    int parentPartId = particleStack_.back();
 
     // get relative positioning data
     RigTForm lastRbt = rbtStack_.back();
@@ -104,8 +106,8 @@ public:
     for (int i = 0; i<vbolen; ++i) {
       // calculate world coordinates of each vertex
       Cvec3 v = Cvec3(lastRbt * Q * Cvec4((double)vs[i].p[0]*scales[0], 
-                                             (double)vs[i].p[1]*scales[1], 
-                                             (double)vs[i].p[2]*scales[2], 0));
+                                          (double)vs[i].p[1]*scales[1], 
+                                          (double)vs[i].p[2]*scales[2], 0));
       
       // check for duplicate vertices
       // if found, use its particle id and don't add the particle to the stack
@@ -122,41 +124,46 @@ public:
         // else add vertex as a particle
         vertices[i].absPos = v;
         vertices[i].particle_id = idCounter_;
-        particles_.push_back(Particle(vertices[i].absPos, vertices[i].absPos, 1));
+        particles_.push_back(Particle(v, v, 1));
+        particleStack_.push_back(idCounter_);
+
+        // add constraint from parent to vertex
+        Constraint newConstraint;
+        newConstraint.ParticleA = parentPartId;
+        newConstraint.ParticleB = idCounter_;
+        newConstraint.restLength = sqrt(abs(dot(lastRbt.getTranslation() - v,
+                                                lastRbt.getTranslation() - v)));
+        constraint_.push_back(newConstraint);
+
         idCounter_++;
       }
     }
 
-    cout << "ibolen: " << ibolen << "works up til here!" << endl; 
 
-    // create inter-triangle restraints
-    for (int i=0; i<ibolen-2; i+3) {
-      vertex A = vertices[(int)ibo[i]];
-      vertex B = vertices[(int)ibo[i+1]];
-      vertex C = vertices[(int)ibo[i+2]];
+    // create inter-triangle constraints
+    for (int j=0; j<ibolen-2; j+=3) {
+      vertex A = vertices[(int)ibo[j]];
+      vertex B = vertices[(int)ibo[j+1]];
+      vertex C = vertices[(int)ibo[j+2]];
 
       Constraint C1, C2, C3;
-      // if not first particle, create constraint
-      // given triangle ABC, constraints are AB, BC, AC.
-       if (particleStack_.size() > 0) {
-        C1.particleA = A.particle_id;
-        C1.particleB = B.particle_id;
-        C1.restLength = sqrt(abs(norm2(A.absPos - B.absPos)));
+      // given triangle ABC, constraints are A->B, B->C, C->A.
+      C1.particleA = A.particle_id;
+      C1.particleB = B.particle_id;
+      C1.restLength = sqrt(abs(dot(A.absPos - B.absPos, A.absPos - B.absPos)));
 
-        C2.particleA = B.particle_id;
-        C2.particleB = C.particle_id;
-        C3.restLength = sqrt(abs(norm2(B.absPos - C.absPos)));
+      C2.particleA = B.particle_id;
+      C2.particleB = C.particle_id;
+      C2.restLength = sqrt(abs(dot(B.absPos - C.absPos, B.absPos - C.absPos)));
 
-        C3.particleA = A.particle_id;
-        C3.particleB = C.particle_id;
-        C3.restLength = sqrt(abs(norm2(A.absPos - C.absPos)));
+      C3.particleA = C.particle_id;
+      C3.particleB = A.particle_id;
+      C3.restLength = sqrt(abs(dot(C.absPos - A.absPos, C.absPos - A.absPos)));
       
-        constraints_.push_back(C1);
-        constraints_.push_back(C2);
-        constraints_.push_back(C3);
-      }
+      constraints_.push_back(C1);
+      constraints_.push_back(C2);
+      constraints_.push_back(C3);
     }  
-    cout << "returning from visiting a shape node" << endl;
     return true;
   }
 
