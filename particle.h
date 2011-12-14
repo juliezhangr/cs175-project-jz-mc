@@ -50,7 +50,7 @@ public:
     m_constraints = cs;
     m_vGravity = g; 
     m_fTimeStep = ts;
-    num_iterations = 100;
+    num_iterations = 50;
   };
 
 private:
@@ -123,28 +123,7 @@ void ParticleSystem::SatisfyConstraints() {
   }
 }
 
-/*
-// Implements simulation of a stick in a box
-void ParticleSystem::SatisfyConstraints() {
-   for(int j=0; j<NUM_ITERATIONS; j++) {
-         // First satisfy (C1)
-         for(int i=0; i<NUM_PARTICLES; i++) { // For all particles
-            Cvec3&             x = m_x[i];
-               x = vmin(vmax(x, Cvec3(0,0,0)),
-                  Cvec3(1000,1000,1000));
-         }
 
-         // Then satisfy (C2)
-         Cvec3& x1 = m_x[0];
-         Cvec3& x2 = m_x[1];
-         Cvec3 delta = x2-x1;
-         float deltalength = sqrt(delta*delta);
-         float diff = (deltalength-restlength)/deltalength;
-         x1 -= delta*0.5*diff;
-         x2 += delta*0.5*diff;
-   }
-}
-*/
 
 void ParticleSystem::constrain(int particleAId, int particleBId) {
   Constraint constraint;
