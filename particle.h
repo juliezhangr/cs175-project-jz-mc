@@ -52,7 +52,7 @@ public:
     m_constraints = cs;
     m_vGravity = g; 
     m_fTimeStep = ts;
-    num_iterations = 50;
+    num_iterations = 5;
   };
 
 private:
@@ -127,7 +127,7 @@ void ParticleSystem::SatisfyConstraints() {
       
       x1 -= delta * p_[c.particleA].invm * 0.2 * diff;
       x2 += delta * p_[c.particleB].invm * 0.2 * diff;
-      }
+    }
   }
 }
 
