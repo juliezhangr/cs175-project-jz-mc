@@ -67,10 +67,7 @@ public:
   }
 
   virtual bool visit(SgShapeNode& shapeNode) {
-    
-    // TODO: Shape vertex particles!
-    // for each vertex, should create a particle
-    // for each edge, should create a constraint
+  
     shared_ptr<SgGeometryShapeNode> GeoPtr = 
       dynamic_pointer_cast<SgGeometryShapeNode>(shapeNode.shared_from_this());
     // save parent particle id number
@@ -128,14 +125,14 @@ public:
         particleStack_.push_back(idCounter_);
 
         // add constraint from parent to vertex (only 4 needed)
-        if (i < 4) {
+        //if (i < 4) {
           Constraint newConstraint;
-          newConstraint.particleA = parentPartId;
-          newConstraint.particleB = idCounter_;
+          newConstraint.particleB = parentPartId;
+          newConstraint.particleA = idCounter_;
           newConstraint.restLength = sqrt(abs(dot(lastRbt.getTranslation() - v,
                                                   lastRbt.getTranslation() - v)));
           constraints_.push_back(newConstraint);
-        }
+          //}
         idCounter_++;
       }
     }
@@ -149,16 +146,16 @@ public:
 
       Constraint C1, C2, C3;
       // given triangle ABC, constraints are A->B, B->C, C->A.
-      C1.particleA = A.particle_id;
-      C1.particleB = B.particle_id;
+      C1.particleA = B.particle_id;
+      C1.particleB = A.particle_id;
       C1.restLength = sqrt(abs(dot(A.absPos - B.absPos, A.absPos - B.absPos)));
 
-      C2.particleA = B.particle_id;
-      C2.particleB = C.particle_id;
+      C2.particleA = C.particle_id;
+      C2.particleB = B.particle_id;
       C2.restLength = sqrt(abs(dot(B.absPos - C.absPos, B.absPos - C.absPos)));
 
-      C3.particleA = C.particle_id;
-      C3.particleB = A.particle_id;
+      C3.particleA = A.particle_id;
+      C3.particleB = C.particle_id;
       C3.restLength = sqrt(abs(dot(C.absPos - A.absPos, C.absPos - A.absPos)));
       
       constraints_.push_back(C1);

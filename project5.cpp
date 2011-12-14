@@ -134,7 +134,7 @@ bool g_ragdollEnabled = true;
 int g_ragdollFramesPerSecond = 60;
 static shared_ptr<ParticleSystem> g_particleSystem;
 
-static shared_ptr<SgRbtNode>& g_ragdollNode = g_robot1Node;
+static shared_ptr<SgRbtNode>& g_ragdollNode = g_ballNode;
 
 ///////////////// END OF G L O B A L S //////////////////////////////////////////////////
 
