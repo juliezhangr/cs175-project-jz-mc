@@ -43,6 +43,8 @@ class ParticleSystem {
 public:   
   void               constrain(int particleIdA, int particleIdB);
   void               TimeStep();
+  void               setFixedParticle(int particleId);
+  void               changeGravity(Cvec3 change);
   vector<Particle>&  getParticleVector();
 
   ParticleSystem(vector<Particle> ps, vector<Constraint> cs, const Cvec3& g, const float ts) {
@@ -64,11 +66,15 @@ private:
 void ParticleSystem::Verlet() {
   int num_particles = p_.size();
   for(int i=0; i < num_particles - 1; i++) {
+    if(p_[i].invm == 0)
+      continue;
+    
     Cvec3& x = p_[i].x_;
     Cvec3& oldx = p_[i].oldx_;
 
     Cvec3 temp = x;
     Cvec3 a = m_a[i];
+
 
     x += x - oldx + a * m_fTimeStep * m_fTimeStep;
     oldx = temp;
@@ -80,6 +86,8 @@ void ParticleSystem::AccumulateForces()
 {
   Cvec3 curr_a;
   int num_particles = p_.size();
+
+  m_a.clear();
 
   // All particles are influenced by gravity
   for(int i=0; i < num_particles; i++) {
@@ -123,8 +131,6 @@ void ParticleSystem::SatisfyConstraints() {
   }
 }
 
-
-
 void ParticleSystem::constrain(int particleAId, int particleBId) {
   Constraint constraint;
   constraint.particleA = particleAId;
@@ -141,6 +147,23 @@ void ParticleSystem::TimeStep() {
 
 vector<Particle>& ParticleSystem::getParticleVector() {
   return p_;
+}
+
+void ParticleSystem::setFixedParticle(int particleId) {
+  int num_particles = p_.size();
+  for(int i = 0; i < num_particles; i++) {
+    if(i == particleId) {
+      p_[i].invm = 0;
+    }
+    else {
+      p_[i].invm = 1;
+    }
+  }
+}
+
+void ParticleSystem::changeGravity(Cvec3 change) {
+  m_vGravity += change;
+  printf("%f, %f, %f\n", m_vGravity[0], m_vGravity[1], m_vGravity[2]);
 }
 
 #endif

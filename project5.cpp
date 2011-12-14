@@ -120,7 +120,7 @@ static shared_ptr<SgRbtNode> g_robot1Node;
 static shared_ptr<SgRbtNode> g_currentCameraNode;
 static shared_ptr<SgRbtNode> g_currentPickedRbtNode;
 
-static const Cvec3 g_gravity(0, -3.0, 0);  // gravity vector
+static Cvec3 g_gravity(0, -6.0, 0);  // gravity vector
 static double g_timeStep = 0.02;
 static double g_numStepsPerFrame = 20;
 static double g_damping = 0.96;
@@ -135,6 +135,8 @@ int g_ragdollFramesPerSecond = 60;
 static shared_ptr<ParticleSystem> g_particleSystem;
 
 static shared_ptr<SgRbtNode>& g_ragdollNode = g_robot1Node;
+
+static void initParticles();
 
 ///////////////// END OF G L O B A L S //////////////////////////////////////////////////
 
@@ -258,14 +260,16 @@ static void drawStuff(const ShaderState& curSS, bool picking) {
       drawArcBall(curSS);
   }
   else {
-    Picker picker(invEyeRbt, curSS);
-    g_world->accept(picker);
-    glFlush();
-    g_currentPickedRbtNode = picker.getRbtNodeAtXY(g_mouseClickX, g_mouseClickY);
-    if (g_currentPickedRbtNode == g_groundNode)
-      g_currentPickedRbtNode = shared_ptr<SgRbtNode>(); // set to NULL
+    //Picker picker(invEyeRbt, curSS);
+    //g_world->accept(picker);
+    //glFlush();
+    //g_currentPickedRbtNode = picker.getRbtNodeAtXY(g_mouseClickX, g_mouseClickY);
+    //if (g_currentPickedRbtNode == g_groundNode)
+    //  g_currentPickedRbtNode = shared_ptr<SgRbtNode>(); // set to NULL
+ 
+    ////g_particleSystem->setFixedParticle(g_currentPickedRbtNode->getParticleId());
 
-    cout << (g_currentPickedRbtNode ? "Part picked" : "No part picked") << endl;
+    //cout << (g_currentPickedRbtNode ? "Part picked" : "No part picked") << endl;
   }
 }
 
@@ -406,10 +410,15 @@ static void motion(const int x, const int y) {
     target = g_currentCameraNode;
     break;
   }
-
+  
   A = inv(getPathAccumRbt(g_world, target, 1)) * A;
 
-  target->setRbt(doMtoOwrtA(M, target->getRbt(), A));
+  RigTForm newRbt = doMtoOwrtA(M, target->getRbt(), A);
+  target->setRbt(newRbt);
+
+  // also fix the position of the particle
+  //g_particleSystem->getParticleVector()[target->getParticleId()].x_ = newRbt.getTranslation();
+  //target->getRbt().setRotation(newRbt.getRotation());
 
   // OK, so motion will set the new RBT based on the rotation and translation movement
   // of the mouse:
@@ -446,6 +455,23 @@ static void mouse(const int button, const int state, const int x, const int y) {
   }
 }
 
+static void physicsTimerCallback(int ms) {
+  // update the particles
+  g_particleSystem->TimeStep();
+  
+  // update the scene graph
+  RigTForm r = RigTForm();
+  vector<Particle>& p = g_particleSystem->getParticleVector(); // TODO: This should return a reference
+  Poser poser = Poser(r, p);
+  g_ragdollNode->accept(poser);
+  //g_ballNode->accept(poser);
+
+  if (g_ragdollEnabled) {
+    glutTimerFunc(1000/g_ragdollFramesPerSecond, physicsTimerCallback, ms + 1000/g_ragdollFramesPerSecond);
+  }
+
+  display();
+}
 
 static void keyboard(const unsigned char key, const int x, const int y) {
   switch (key) {
@@ -491,8 +517,18 @@ static void keyboard(const unsigned char key, const int x, const int y) {
   case 'a':
     g_displayArcball = !g_displayArcball;
     break;
-  
+  case 'r':
+    g_ragdollEnabled = !g_ragdollEnabled;
+    initParticles();
+    break;
+  case '+':
+    g_particleSystem->changeGravity(Cvec3(0,-2,0));
+    break;
+  case '-':
+    g_particleSystem->changeGravity(Cvec3(0,2,0));
+    break;
   }
+
 
   glutPostRedisplay();
 }
@@ -617,7 +653,7 @@ static void constructRobot(shared_ptr<SgTransformNode> base, const Cvec3& color)
 static void initScene() {
   g_world.reset(new SgRootNode());
 
-  g_skyNode.reset(new SgRbtNode(RigTForm(Cvec3(0, 0.5, 4))));
+  g_skyNode.reset(new SgRbtNode(RigTForm(Cvec3(0, -2.5, 4.5))));
 
   //g_groundNode.reset(new SgRbtNode());
   //g_groundNode->addChild(shared_ptr<SgGeometryShapeNode>(
@@ -648,40 +684,17 @@ static void initScene() {
   g_currentCameraNode = g_skyNode;
 }
 
-static void physicsTimerCallback(int ms) {
-  // update the particles
-  g_particleSystem->TimeStep();
-  
-  // update the scene graph
-  RigTForm r = RigTForm();
-  vector<Particle>& p = g_particleSystem->getParticleVector(); // TODO: This should return a reference
-  Poser poser = Poser(r, p);
-  g_ragdollNode->accept(poser);
-  //g_ballNode->accept(poser);
-
-  if (g_ragdollEnabled) {
-    glutTimerFunc(1000/g_ragdollFramesPerSecond, physicsTimerCallback, ms + 1000/g_ragdollFramesPerSecond);
-  }
-
-  display();
-}
-
 static void initParticles() {  
   // articulator traverses scene graph and creates a new particle for each transform node
   // also establishes mapping from transform nodes to particles
-  
-  // TODO: particles vector doesn't really need to be global... (neither does constraint vector)
+
   g_particles.clear();
   g_constraints.clear();
   Articulator articulator = Articulator(RigTForm(), g_particles, g_constraints);
   g_ragdollNode->accept(articulator);
 
-  // HACK - HOLD HEAD IN PLACE
-  //g_particles[9].invm = 0;
-
   g_particleSystem.reset(new ParticleSystem(g_particles, g_constraints, g_gravity, 1. / (float) g_ragdollFramesPerSecond));
 
-  
   g_particleSystem->constrain(1,4);
   g_particleSystem->constrain(1,7);
   g_particleSystem->constrain(1,10);
@@ -690,11 +703,9 @@ static void initParticles() {
   g_particleSystem->constrain(7,10);
   g_particleSystem->constrain(1,13);
   g_particleSystem->constrain(4,13);
-  g_particleSystem->constrain(7,13);
-  g_particleSystem->constrain(10,13);
 
 
-  printf("Num Particles: %d\nNum Constraints: %d\n", (int) g_particles.size(), (int)g_constraints.size());
+  //printf("Num Particles: %d\nNum Constraints: %d\n", (int) g_particles.size(), (int)g_constraints.size());
  
   physicsTimerCallback(0);
 }
