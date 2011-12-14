@@ -127,14 +127,15 @@ public:
         particles_.push_back(Particle(v, v, 1));
         particleStack_.push_back(idCounter_);
 
-        // add constraint from parent to vertex
-        Constraint newConstraint;
-        newConstraint.particleA = parentPartId;
-        newConstraint.particleB = idCounter_;
-        newConstraint.restLength = sqrt(abs(dot(lastRbt.getTranslation() - v,
-                                                lastRbt.getTranslation() - v)));
-        constraints_.push_back(newConstraint);
-
+        // add constraint from parent to vertex (only 4 needed)
+        if (i < 4) {
+          Constraint newConstraint;
+          newConstraint.particleA = parentPartId;
+          newConstraint.particleB = idCounter_;
+          newConstraint.restLength = sqrt(abs(dot(lastRbt.getTranslation() - v,
+                                                  lastRbt.getTranslation() - v)));
+          constraints_.push_back(newConstraint);
+        }
         idCounter_++;
       }
     }
