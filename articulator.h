@@ -156,7 +156,7 @@ public:
         constraints_.push_back(C3);
       }
     }  
-    
+    cout << "returning from visiting a shape node" << endl;
     return true;
   }
 
