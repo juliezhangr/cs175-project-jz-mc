@@ -129,11 +129,11 @@ public:
 
         // add constraint from parent to vertex
         Constraint newConstraint;
-        newConstraint.ParticleA = parentPartId;
-        newConstraint.ParticleB = idCounter_;
+        newConstraint.particleA = parentPartId;
+        newConstraint.particleB = idCounter_;
         newConstraint.restLength = sqrt(abs(dot(lastRbt.getTranslation() - v,
                                                 lastRbt.getTranslation() - v)));
-        constraint_.push_back(newConstraint);
+        constraints_.push_back(newConstraint);
 
         idCounter_++;
       }
