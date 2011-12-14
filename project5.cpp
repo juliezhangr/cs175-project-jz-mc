@@ -656,7 +656,7 @@ static void physicsTimerCallback(int ms) {
   RigTForm r = RigTForm();
   vector<Particle>& p = g_particleSystem->getParticleVector(); // TODO: This should return a reference
   Poser poser = Poser(r, p);
-  //g_ragdollNode->accept(poser);
+  g_ragdollNode->accept(poser);
   g_ballNode->accept(poser);
 
   if (g_ragdollEnabled) {
@@ -674,7 +674,7 @@ static void initParticles() {
   g_particles.clear();
   g_constraints.clear();
   Articulator articulator = Articulator(RigTForm(), g_particles, g_constraints);
-  //g_ragdollNode->accept(articulator);
+  g_ragdollNode->accept(articulator);
   g_ballNode->accept(articulator);
 
   // HACK - HOLD HEAD IN PLACE

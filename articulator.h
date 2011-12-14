@@ -67,7 +67,7 @@ public:
   }
 
   virtual bool visit(SgShapeNode& shapeNode) {
-    /*
+    
     // TODO: Shape vertex particles!
     // for each vertex, should create a particle
     // for each edge, should create a constraint
@@ -127,7 +127,7 @@ public:
       }
     }
 
-    cout << ibolen << endl; 
+    cout << "ibolen: " << ibolen << "works up til here!" << endl; 
 
     // create inter-triangle restraints
     for (int i=0; i<ibolen-2; i+3) {
@@ -156,7 +156,7 @@ public:
         constraints_.push_back(C3);
       }
     }  
-    */
+    
     return true;
   }
 
