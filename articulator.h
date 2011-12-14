@@ -161,7 +161,6 @@ public:
   }
 
   virtual bool postVisit(SgShapeNode& shapeNode) {
-    particleStack_.pop_back();
     return true;
   }
 };

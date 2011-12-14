@@ -656,8 +656,8 @@ static void physicsTimerCallback(int ms) {
   RigTForm r = RigTForm();
   vector<Particle>& p = g_particleSystem->getParticleVector(); // TODO: This should return a reference
   Poser poser = Poser(r, p);
-  //g_ragdollNode->accept(poser);
-  g_ballNode->accept(poser);
+  g_ragdollNode->accept(poser);
+  //g_ballNode->accept(poser);
 
   if (g_ragdollEnabled) {
     glutTimerFunc(1000/g_ragdollFramesPerSecond, physicsTimerCallback, ms + 1000/g_ragdollFramesPerSecond);
@@ -674,8 +674,7 @@ static void initParticles() {
   g_particles.clear();
   g_constraints.clear();
   Articulator articulator = Articulator(RigTForm(), g_particles, g_constraints);
-  //g_ragdollNode->accept(articulator);
-  g_ballNode->accept(articulator);
+  g_ragdollNode->accept(articulator);
 
   // HACK - HOLD HEAD IN PLACE
   //g_particles[9].invm = 0;
@@ -683,16 +682,16 @@ static void initParticles() {
   g_particleSystem.reset(new ParticleSystem(g_particles, g_constraints, g_gravity, 1. / (float) g_ragdollFramesPerSecond));
 
   
-  g_particleSystem->constrain(1,3);
-  g_particleSystem->constrain(1,5);
+  g_particleSystem->constrain(1,4);
   g_particleSystem->constrain(1,7);
-  g_particleSystem->constrain(3,5);
-  g_particleSystem->constrain(3,7);
-  g_particleSystem->constrain(5,7);
-  g_particleSystem->constrain(1,9);
-  g_particleSystem->constrain(3,9);
-  g_particleSystem->constrain(5,9);
-  g_particleSystem->constrain(7,9);
+  g_particleSystem->constrain(1,10);
+  g_particleSystem->constrain(4,7);
+  g_particleSystem->constrain(4,10);
+  g_particleSystem->constrain(7,10);
+  g_particleSystem->constrain(1,13);
+  g_particleSystem->constrain(4,13);
+  g_particleSystem->constrain(7,13);
+  g_particleSystem->constrain(10,13);
 
 
   printf("Num Particles: %d\nNum Constraints: %d\n", (int) g_particles.size(), (int)g_constraints.size());
