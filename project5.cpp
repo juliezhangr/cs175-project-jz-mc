@@ -134,7 +134,7 @@ bool g_ragdollEnabled = true;
 int g_ragdollFramesPerSecond = 60;
 static shared_ptr<ParticleSystem> g_particleSystem;
 
-static shared_ptr<SgRbtNode>& g_ragdollNode = g_ballNode;
+static shared_ptr<SgRbtNode>& g_ragdollNode = g_robot1Node;
 
 static void initParticles();
 
@@ -684,22 +684,22 @@ static void initScene() {
   g_currentCameraNode = g_skyNode;
 }
 
-static void physicsTimerCallback(int ms) {
-  // update the particles
-  g_particleSystem->TimeStep();
-  
-  // update the scene graph
-  RigTForm r = RigTForm();
-  vector<Particle>& p = g_particleSystem->getParticleVector(); // TODO: This should return a reference
-  Poser poser = Poser(r, p);
-  g_ragdollNode->accept(poser);
-
-  if (g_ragdollEnabled) {
-    glutTimerFunc(1000/g_ragdollFramesPerSecond, physicsTimerCallback, ms + 1000/g_ragdollFramesPerSecond);
-  }
-
-  display();
-}
+//static void physicsTimerCallback(int ms) {
+//  // update the particles
+//  g_particleSystem->TimeStep();
+//  
+//  // update the scene graph
+//  RigTForm r = RigTForm();
+//  vector<Particle>& p = g_particleSystem->getParticleVector(); // TODO: This should return a reference
+//  Poser poser = Poser(r, p);
+//  g_ragdollNode->accept(poser);
+//
+//  if (g_ragdollEnabled) {
+//    glutTimerFunc(1000/g_ragdollFramesPerSecond, physicsTimerCallback, ms + 1000/g_ragdollFramesPerSecond);
+//  }
+//
+//  display();
+//}
 
 static void initParticles() {  
   // articulator traverses scene graph and creates a new particle for each transform node
