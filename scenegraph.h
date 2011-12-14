@@ -11,7 +11,6 @@
 #include "matrix4.h"
 #include "rigtform.h"
 #include "glsupport.h" // for Noncopyable
-#include "asstcommon.h"
 
 struct ShaderState;
 class SgNodeVisitor;
@@ -76,12 +75,8 @@ private:
 class SgShapeNode : public SgNode {
 public:
   virtual bool accept(SgNodeVisitor& visitor);
-
   virtual Matrix4 getAffineMatrix() = 0;
   virtual void draw(const ShaderState& curSS) = 0;
-  virtual std::tr1::shared_ptr<Geometry> getGeometry() = 0;
-  virtual Cvec3 getTranslation() = 0;
-  virtual Cvec3 getAngles() = 0;
 };
 
 

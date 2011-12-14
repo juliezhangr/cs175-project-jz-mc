@@ -107,7 +107,7 @@ void ParticleSystem::SatisfyConstraints() {
       x = vmin(vmax(x, Cvec3(-5,-5,-5)),
                Cvec3(5,5,5));
     }
-
+    /*
     // ensure distance constraints are satisfied
     for(int k = 0; k < num_constraints; k++) {
       Constraint& c = m_constraints[k];
@@ -119,7 +119,7 @@ void ParticleSystem::SatisfyConstraints() {
       
       x1 -= delta * p_[c.particleA].invm * 0.2 * diff;
       x2 += delta * p_[c.particleB].invm * 0.2 * diff;
-    }
+      }*/
   }
 }
 

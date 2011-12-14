@@ -67,35 +67,58 @@ public:
     // TODO: Shape vertex particles!
     // for each vertex, should create a particle
     // for each edge, should create a constraint
+    shared_ptr<SgGeometryShapeNode> GeoPtr = 
+      dynamic_pointer_cast<SgGeometryShapeNode>(shapeNode.shared_from_this());
 
-    RigTForm lastPos = rbtStack_.back().getTranslation();
-    Matrix4 T = shapeNode.getAffineMatrix();
+    // get relative positioning data
+    Cvec3 lastPos = rbtStack_.back().getTranslation();
+    Cvec3 translation = GeoPtr->getTranslation();
+    Cvec3 angles = GeoPtr->getAngles;
+    Cvec3 scales = GeoPtr->getScale;
+    Quat rot = makeXRotation(angles[0]) * makeYRotation(angles[1]) * makeZRotation(angles[1]);
+    RigTForm Q = RigTForm(translation, rot);
 
     // get vertex data
-    std::tr1::shared_ptr<Geometry> g = shapeNode.getGeometry();
+    std::tr1::shared_ptr<Geometry> g = GeoPtr->getGeometry();
     int vbolen, ibolen;
     g->getVboIbolen(vbolen, ibolen);
     
-    typedef struct {
-      Cvec3 v;
+    typedef struct vertex {
+      Cvec3 absPos;
       int particle_id;
     } vertex;
+
+    // create array of vertex data
     vertex vertices[vbolen];
 
+    // get raw VBO and IBO from geometry
     VertexPN *vs = g->getVbo();
     unsigned short *ibo = g->getIbo();
 
     for (int i = 0; i<vbolen; ++i) {
-      vertices[i].v = Cvec3((double)vs[i].p[0], (double)vs[i].p[1], (double)vs[i].p[2]);
-
-      // add vertex as a particle
-      //Cvec3 currPos = lastPos + T * relpos;
+      // calculate world coordinates of each vertex
+      Cvec3 v = lastPos + Q * Cvec3((double)vs[i].p[0]*scales[0], 
+                            (double)vs[i].p[1]*scales[1], 
+                            (double)vs[i].p[2]*scales[2]);
+      
+      // check for duplicate vertices
+      // if found, use its particle id and don't add the particle to the stack
+      for (int k = 0; k < i; k++) {
+        if (vertices[k].absPos == v) {
+          vertices[i].absPos = v;
+          vertices[i].particle_id = vertices[k].particle_id;
+          return;
+        }
+      }
+      // else add vertex as a particle
+      vertices[i].absPos = v;
       vertices[i].particle_id = idCounter_;
-      particles_.push_back(Particle(currPos, currPos, 1));
-
+      particles_.push_back(Particle(vertices[i].absPos, vertices[i].absPos, 1));
       idCounter_++;
+      
     }
 
+    // create inter-triangle restraints
     for (int i=0; i<ibolen-2; i+3) {
       vertex A = vertices[ibo[i]];
       vertex B = vertices[ibo[i+1]];
@@ -104,29 +127,30 @@ public:
       Constraint C1, C2, C3;
       // if not first particle, create constraint
       // given triangle ABC, constraints are AB, BC, AC.
-       if(particleStack_.size() > 0) {
+       if (particleStack_.size() > 0) {
         C1.particleA = A.particle_id;
         C1.particleB = B.particle_id;
-        C1.restLength = sqrt(norm2(A.v - B.v));
+        C1.restLength = sqrt(norm2(A.absPos - B.absPos));
 
         C2.particleA = B.particle_id;
         C2.particleB = C.particle_id;
-        C3.restLength = sqrt(norm2(B.v - C.v));
+        C3.restLength = sqrt(norm2(B.absPos - C.absPos));
 
         C3.particleA = A.particle_id;
         C3.particleB = C.particle_id;
-        C3.restLength = sqrt(norm2(A.v - C.v));
+        C3.restLength = sqrt(norm2(A.absPos - C.absPos));
       
         constraints_.push_back(C1);
         constraints_.push_back(C2);
         constraints_.push_back(C3);
       }
     }  
-
+    
     return true;
   }
 
   virtual bool postVisit(SgShapeNode& shapeNode) {
+    particleStack.pop_back();
     return true;
   }
 };

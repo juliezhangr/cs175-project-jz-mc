@@ -563,15 +563,15 @@ static void constructRobot(shared_ptr<SgTransformNode> base, const Cvec3& color)
     {0, -TORSO_WIDTH/2, TORSO_LEN/2, 0}, // upper left arm
     {1,  ARM_LEN, 0, 0}, // lower right arm
     {2, -ARM_LEN, 0, 0}, // lower left arm
-    {3, ARM_LEN, 0, 0}, // right hand
-    {4, -ARM_LEN, 0, 0}, // left hand
     {0, TORSO_WIDTH/2-LEG_THICK/2, -TORSO_LEN/2, 0}, // upper right leg
     {0, -TORSO_WIDTH/2+LEG_THICK/2, -TORSO_LEN/2, 0}, // upper left leg
     {5, 0, -LEG_LEN, 0}, // lower right leg
     {6, 0, -LEG_LEN, 0}, // lower left leg
-    {9, 0, -LEG_LEN, 0}, // right foot
-    {10, 0, -LEG_LEN, 0}, // left foot
-    {0, 0, TORSO_LEN/2, 0} // head
+    {0, 0, TORSO_LEN/2, 0}, // head
+    {3, ARM_LEN, 0, 0}, // right hand
+    {4, -ARM_LEN, 0, 0}, // left hand
+    {7, 0, -LEG_LEN, 0}, // right foot
+    {8, 0, -LEG_LEN, 0} // left foot
   };
 
   struct ShapeDesc {
@@ -656,7 +656,8 @@ static void physicsTimerCallback(int ms) {
   RigTForm r = RigTForm();
   vector<Particle>& p = g_particleSystem->getParticleVector(); // TODO: This should return a reference
   Poser poser = Poser(r, p);
-  g_ragdollNode->accept(poser);
+  //g_ragdollNode->accept(poser);
+  g_ballNode->accept(poser);
 
   if (g_ragdollEnabled) {
     glutTimerFunc(1000/g_ragdollFramesPerSecond, physicsTimerCallback, ms + 1000/g_ragdollFramesPerSecond);
@@ -673,7 +674,8 @@ static void initParticles() {
   g_particles.clear();
   g_constraints.clear();
   Articulator articulator = Articulator(RigTForm(), g_particles, g_constraints);
-  g_ragdollNode->accept(articulator);
+  //g_ragdollNode->accept(articulator);
+  g_ballNode->accept(articulator);
 
   // HACK - HOLD HEAD IN PLACE
   /*g_particles[9].invm = 0;*/
@@ -686,7 +688,7 @@ static void initParticles() {
     g_particleSystem->constrain(corners[i], corners[(i + 1) % 4]);
   }
   */
-  
+  /*
   g_particleSystem->constrain(0,1);
   g_particleSystem->constrain(1,2);
   g_particleSystem->constrain(0,3);
@@ -702,9 +704,10 @@ static void initParticles() {
   g_particleSystem->constrain(1,7);
   g_particleSystem->constrain(3,7);
   g_particleSystem->constrain(1,5);
+  */
 
   printf("Num Particles: %d\nNum Constraints: %d\n", (int) g_particles.size(), (int)g_constraints.size());
-
+ 
   physicsTimerCallback(0);
 }
 

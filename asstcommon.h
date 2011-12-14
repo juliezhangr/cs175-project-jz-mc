@@ -170,7 +170,8 @@ class SgGeometryShapeNode : public SgShapeNode {
   Matrix4 affineMatrix_;
   Cvec3 color_;
   Cvec3 t_;
-  Cvec3 angles_;
+  Cvec3 angles_;                                
+  Cvec3 scale_;
 public:
   SgGeometryShapeNode(std::tr1::shared_ptr<Geometry> geometry,
                       const Cvec3& color,
@@ -196,16 +197,20 @@ public:
     geometry_->draw(curSS);
   }
 
-  virtual std::tr1::shared_ptr<Geometry> getGeometry() {
+  std::tr1::shared_ptr<Geometry> getGeometry() {
     return geometry_;
   }
   
-  virtual Cvec3 getTranslation() {
+  Cvec3 getTranslation() {
     return t_;
   }
   
-  virtual Cvec3 getAngles() {
+  Cvec3 getAngles() {
     return angles_;
+  }
+
+  Cvec3 getScale() {
+    return scale_;
   }
 };
 
