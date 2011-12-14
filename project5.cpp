@@ -628,7 +628,7 @@ static void initScene() {
                       (new SgGeometryShapeNode(g_box, (Cvec3(1, 1, 1)))));
   
 
-  g_robot1Node.reset(new SgRbtNode(RigTForm(Cvec3(-2, 1, 0))));
+  g_robot1Node.reset(new SgRbtNode(RigTForm(Cvec3(0, 0, 0))));
   //g_robot2Node.reset(new SgRbtNode(RigTForm(Cvec3(2, 1, 0))));
 
   constructRobot(g_robot1Node, Cvec3(1, 0, 0)); // a Red robot
@@ -672,32 +672,21 @@ static void initParticles() {
   g_ragdollNode->accept(articulator);
 
   // HACK - HOLD HEAD IN PLACE
-  /*g_particles[9].invm = 0;*/
+  //g_particles[9].invm = 0;
 
   g_particleSystem.reset(new ParticleSystem(g_particles, g_constraints, g_gravity, 1. / (float) g_ragdollFramesPerSecond));
-
-  // HACK
-  /*int corners[4] = {1,3,7,5};
-  for(int i = 0; i < 4; i++) {
-    g_particleSystem->constrain(corners[i], corners[(i + 1) % 4]);
-  }
-  */
   
-  g_particleSystem->constrain(0,1);
-  g_particleSystem->constrain(1,2);
-  g_particleSystem->constrain(0,3);
-  g_particleSystem->constrain(3,4);
-  g_particleSystem->constrain(0,5);
-  g_particleSystem->constrain(5,6);
-  g_particleSystem->constrain(0,7);
-  g_particleSystem->constrain(7,8);
-  g_particleSystem->constrain(0,9);
-
-  g_particleSystem->constrain(3,5);
-  g_particleSystem->constrain(5,7);
-  g_particleSystem->constrain(1,7);
-  g_particleSystem->constrain(3,7);
+  g_particleSystem->constrain(1,3);
   g_particleSystem->constrain(1,5);
+  g_particleSystem->constrain(1,7);
+  g_particleSystem->constrain(3,5);
+  g_particleSystem->constrain(3,7);
+  g_particleSystem->constrain(5,7);
+  g_particleSystem->constrain(1,9);
+  g_particleSystem->constrain(3,9);
+  g_particleSystem->constrain(5,9);
+  g_particleSystem->constrain(7,9);
+
 
   printf("Num Particles: %d\nNum Constraints: %d\n", (int) g_particles.size(), (int)g_constraints.size());
 
