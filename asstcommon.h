@@ -175,6 +175,7 @@ class SgGeometryShapeNode : public SgShapeNode {
   Cvec3 t_;
   Cvec3 angles_;                                
   Cvec3 scale_;
+  int vertices_;
 public:
   SgGeometryShapeNode(std::tr1::shared_ptr<Geometry> geometry,
                       const Cvec3& color,
@@ -215,6 +216,14 @@ public:
 
   Cvec3 getScale() {
     return scale_;
+  }
+  
+  int getVertices() {
+    return vertices_;
+  }
+
+  void setVertices(int v) {
+    vertices_ = v;
   }
 };
 

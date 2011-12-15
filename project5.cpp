@@ -260,16 +260,16 @@ static void drawStuff(const ShaderState& curSS, bool picking) {
       drawArcBall(curSS);
   }
   else {
-    //Picker picker(invEyeRbt, curSS);
-    //g_world->accept(picker);
-    //glFlush();
-    //g_currentPickedRbtNode = picker.getRbtNodeAtXY(g_mouseClickX, g_mouseClickY);
-    //if (g_currentPickedRbtNode == g_groundNode)
+    // Picker picker(invEyeRbt, curSS);
+    // g_world->accept(picker);
+    // glFlush();
+    // g_currentPickedRbtNode = picker.getRbtNodeAtXY(g_mouseClickX, g_mouseClickY);
+    // if (g_currentPickedRbtNode == g_groundNode)
     //  g_currentPickedRbtNode = shared_ptr<SgRbtNode>(); // set to NULL
  
-    ////g_particleSystem->setFixedParticle(g_currentPickedRbtNode->getParticleId());
+    // g_particleSystem->setFixedParticle(g_currentPickedRbtNode->getParticleId());
 
-    //cout << (g_currentPickedRbtNode ? "Part picked" : "No part picked") << endl;
+    // cout << (g_currentPickedRbtNode ? "Part picked" : "No part picked") << endl;
   }
 }
 
@@ -416,18 +416,6 @@ static void motion(const int x, const int y) {
   RigTForm newRbt = doMtoOwrtA(M, target->getRbt(), A);
   target->setRbt(newRbt);
 
-  // also fix the position of the particle
-  //g_particleSystem->getParticleVector()[target->getParticleId()].x_ = newRbt.getTranslation();
-  //target->getRbt().setRotation(newRbt.getRotation());
-
-  // OK, so motion will set the new RBT based on the rotation and translation movement
-  // of the mouse:
- /*  TODO: 
-   * Before displaying, run the new scene through the ragdoll animation to
-   * display the correct gravity affected scene
-   */
-
-
   g_mouseClickX += dx;
   g_mouseClickY += dy;
   glutPostRedisplay();  // we always redraw if we changed the scene
@@ -464,7 +452,6 @@ static void physicsTimerCallback(int ms) {
   vector<Particle>& p = g_particleSystem->getParticleVector(); // TODO: This should return a reference
   Poser poser = Poser(r, p);
   g_ragdollNode->accept(poser);
-  //g_ballNode->accept(poser);
 
   if (g_ragdollEnabled) {
     glutTimerFunc(1000/g_ragdollFramesPerSecond, physicsTimerCallback, ms + 1000/g_ragdollFramesPerSecond);
@@ -486,6 +473,8 @@ static void keyboard(const unsigned char key, const int x, const int y) {
     << "v\t\tCycle view\n"
     << "drag left mouse to rotate\n"
     << "a\t\tToggle display arcball\n"
+         << "+\t\tIncrease gravity acceleration\n"
+         << "-\t\tDecrease gravity acceleration\n"
     << endl;
     break;
   case 's':
@@ -683,23 +672,6 @@ static void initScene() {
 
   g_currentCameraNode = g_skyNode;
 }
-
-//static void physicsTimerCallback(int ms) {
-//  // update the particles
-//  g_particleSystem->TimeStep();
-//  
-//  // update the scene graph
-//  RigTForm r = RigTForm();
-//  vector<Particle>& p = g_particleSystem->getParticleVector(); // TODO: This should return a reference
-//  Poser poser = Poser(r, p);
-//  g_ragdollNode->accept(poser);
-//
-//  if (g_ragdollEnabled) {
-//    glutTimerFunc(1000/g_ragdollFramesPerSecond, physicsTimerCallback, ms + 1000/g_ragdollFramesPerSecond);
-//  }
-//
-//  display();
-//}
 
 static void initParticles() {  
   // articulator traverses scene graph and creates a new particle for each transform node

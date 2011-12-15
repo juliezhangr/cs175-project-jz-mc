@@ -10,35 +10,86 @@
 	<div id="content">
 		<h1>Real-time Ragdoll Physics Simulation with Verlet Integration</h1>
 		<h2>Julie Zhang and Matthew Chartier</h2>
-		<br>
-		<h3>Algorithm and Theory</h3>
-		<p>An explanation of the Verlet stuff goes here.</p>
-		
-		<h3>Implementation</h3>
-		<p>How we married the scene graph and visitor class with the Particle system!</p>
-		
-		<h3>Struggles</h3>
-		<p>oh the strugglebus.</p>
-		<div class="imgtxt">
-		<img class="left" src="includes/images/halfway2.png">
-		<img class="center" src="includes/images/halfway.png">
-		<img class="right" src="includes/images/notfalling.png">
+		<ul>
+			<li><a href="#s1">Algorithm and Theory</a></li>
+			<li><a href="#s2">Implementation</a></li>
+			<li><a href="#s3">Struggles</a></li>
+			<li><a href="#s4">Lessons</a></li>
+			<li><a href="#references">References</a></li>
+		</ul>
 		<br />
-			<p>On the left is a cube falling halfway through the box.</p>
+		
+		<h3 id="s1">Algorithm and Theory</h3>
+		<p>For our final project, we implemented ragdoll physics for an articulated body. In developing our physical simulation, we made use of algorithms provided by Jacobson [<a href="#r1">1</a>] which were originally used in IO Interactives `Hitman: Codename 47' to animate cloth, plants, and character deaths.</p>
+
+		<p>Our physics simulation acts on a set of particles, each corresponding to a joint in an articulated body. Particles have a current position, a previous position, and mass. Velocity of a particle is recorded implicitly as the difference between the current and previous position. We also determine an acceleration for each particle based on their respective masses and the forces present in the environment.</p>
+
+		<p>At each step of our simulation, we update the current and previous positions (x and x' respectively) as follows:</p>
+
+		<div style="float: center; width: 200px;">
+				x = 2x - x' + a * (timestep)^2<br />
+				x' = x 
 		</div>
-		<p>continuing on with life...</p>
-		<div class="imgtxt">
-			<img class="right" src="include/images/strug01.png">
-			<p>whoo hi there....</p>
+
+		<p>This process is called Verlet integration <a href="r2">[2]</a>. Useful properties of Verlet integration are that, since velocity is stored implicitly, position and velocity are kept in sync, and it also becomes relatively simple to handle collisions.</p>
+
+
+		<p>We consider handling a potential collision as satisfying a particular constraint. For example, our articulated ragdoll robot is contained within a large room which is shaped like a cube. To keep it from passing through a wall, we enforce the constraint that the position of the robot's particles can not pass outside the bounds defined by the positions of the walls.</p>
+
+		<p>Another type of constraint is the existence of a fixed distance between two particles. Our ragdoll's particles are positioned at its joints. Then the distance between the particle corresponding to the ragdoll's shoulder, for example, must remain a fixed distance apart from the particle corresponding to the ragdoll's elbow, where this distance is the length of the ragdoll's upper arm.</p>
+
+		<div class="left" style="width: 300px">
+			<img id="f1" class="center" style="width:300px; border: 1px solid black;" src="includes/images/image010.gif">
+			<br />
+			<p class="imgtxt"><strong>Figure 1</strong> Relaxation according to constraints.</p>
+		</div>
+
+		<p>We ensure that these constraints are satisfied at each timestep. We achieve this through a process called relaxation. At each timestep, we move all particles which may be in a collision the minimal amount such that they satisfy boundary constraints <a href="#f1">[Figure 1]</a>. Essentially we `project' them out of collision. This is problematic because this project may shorten or lengthen the distance between two particles which should remain a fixed distance from each other! Then we must also ensure that these constraints are satisfied. To do so, we iteratively consider each such constraint and adjust the positions of the relevant particles such that after we move the particles their new positions satisfy the local constraint. By iteratively repeating this process again and again for all constraints, we converge to a state which satisfies all constraints. By also including the particles' inverse masses into the constraint equation, we can also account for particles with different masses. By making a particle's inverse mass equal to 0, we can represent an immovable particle, such as the particle the user is currently holding.</p>
+
+
+		<p>To summarize the process of the simulation at each timestep, we first accumulate the forces in the environment and set accordingly the accelerations of each particle, perform Verlet integration to determine the updated position of each particle, adjust the positions of particles to satisfy constraints. What remains is how we adjusted the nodes in the scene graph to be consistent with the positions of the corresponding particles in our physical simulation.</p>
+
+		<h3 id="s2">Implementation</h3>
+		<p>The Verlet integration step and relaxation are member functions of the ParticleSystem class in particle.h. However, instantiating particles from our existing scene graph posed an interesting challenge.</p>
+		<p>We wanted to continue to make use of the scene graph because it was a convenient model of the relationships between joints in our articulated body which was helpful in the generation of particles and constraints, and also because it provided a convenient means of manipulating the positions and rotations of the shape nodes in a manner which was consistent with the positions of the particles associated with each joint. The scene graph implementation also already has drawer and picker visitors, and it seemed like we could make a new visitor function to traverse the scene graph nodes to create new particles.</p>
+
+		<p>In the scene graph, the visit method of both the SgTransformNode and SgShapeNode will create new particles and constraints into a particle and constraint vector that will then be used to instantiate a ParticleSystem object. The particle in the SgTransformNode is just the position of that joint, with a constraint from the joint to the parent, whereas the particles for the SgShapeNode are all the vertices of the geometry, with constraints representing most of the triangle sides.</p>
+
+		<p>The most interesting problem we faced was appropriately updating the SgRbtNodes in our scene graph to 'pose' the ragdoll in a way consistent with the positions of the joints given by the particles. At any given joint, we wished to adjust the RigTForm of the parent such that the rotation of the parent joint would cause the child joint to fall into the appropriate place as dictated by the physical simulation. (If the elbow particle falls, then the shoulder needs to rotate downward in the scene graph so that both parts of the arm appear with the correct translations and rotations.) We achieved this by creating a scene graph node visitor which, in 'visit', constructed the appropriate quaternion rotation and altered the representation of the world-frame rotation of the parent joint on the stack. Later, in 'postvisit', the parent joint replaces its local RigTForm with one consistent with this new world-frame rotation.</p>
+</p>
+		
+		<h3 id="s3">Struggles</h3>
+		<p>There were many places to create errors in this project.</p>
+		<p>First of all, simply creating a particle for each SgTransformNode in the scene graph wasn't sufficient to avoid "sinking" into the box. It was necessary to add hand and feet SgTransformNodes at the end of the legs and arms so that the lower legs and arms didn't sink in to the elbow and knee joints, as previously those were the last actual Nodes and particles. Also, even with those joints, problems occurred because shapeNodes were not registered as particles. Therefore, part of the shape would be allowed to intersect the box <a href="#f2">[Figure 2]</a>. For example, the sphere shape representing the head could have entirely sunk into a wall until the constraint function caught the neck joint.</p>
+		<div id="f2" class="imgtxt">
+			<img class="left" src="includes/images/halfway2.png">
+			<img class="center" src="includes/images/halfway.png">
+			<img class="right" src="includes/images/notfalling.png">
+			<br />
+			<p><strong>Figure 2</strong> Due to the particle being in the center of the shapeNode surrounding it, shapes would often fall halfway through the bottom of the box (left, center). We can add more particles at the shape's vertices, but it requires adding many more constraints (right).</p>
 		</div>
 		
-		<h3>Lessons</h3>
-		<p>but we learned some'in!</p>
+		<p>Therefore, we had to translate some of the shape vertex information into actual particles as well, so that the constraint function could also catch when these vertices passed through the boxes. And to ensure that the shapes remained rigid, we had to make more constraints for these new particles. While these particles wouldn't be used to actually display the shapeNode, it was important that they would retain their shape and remain in the same configuration relative to the parent node.</p>
+		<p>However, the vertex and index data for the geometries stored in the SgGeometryShapeNodes were originally inaccessible. As pointers to the starts of the vertex and index arrays were given to the Geometry initializer, we originally tried to just keep around a copy of that data. However, as the buffers were temporary variables, it was necessary to create a copy of the vertices and indices instead. Furthermore, a second problem was that the vertex array has duplicates. For example, a cube geometry has 8 actual vertices but 24 vertices in the VBO (4 per face). Therefore these vertices had to be checked for duplicates before being added to the particle stack, or else the constraints would be completely ineffectual as the triangles would be independent to each other.</p>
+		<p>In the end though, this feature is still not completely functional. When tested on a cube (1 particle, 1 shapeNode) while the constraint function will now catch the position of vertices of the shape, forces act very strangely on the particles, resulting in a "floating down" effect rather than a straight fall. It is my guess that the particles of the shapeNode are pulling at the parent particle.</p>	
+		<div class="right">
+			<img id="f3" class="center" src="includes/images/strug01.png">
+			<br />
+			<p class="imgtxt"><strong>Figure 3</strong> Small imprecisions in calculating position can quickly explode into unpredictable behavior.</p>
+		</div>
+				
+		<p>Another large source of error was the 'poser' visitor. It is necessary to compose a new quaternion to apply to the parent node, but when composing the replacement RigTForm, it was crucial to continue to use the old translation component from the original parent's RigTForm. Using the calculated world coordinates to create a translation Cvec3 was a bad idea because that translation data would have small inconsistencies. Even small errors in calculation, after many iterations in the satisfyConstraints() function, would cause the robot system to break apart and would result in crazy behavior like wild flailing <a href="#f3">[Figure 3]</a>, limbs detaching and flying off, and in one memorable occasion, the entirely of the robot being sucked into the ceiling.</p>
+		
+		<p>Finally, we had originally planned to allow the user to pick up the ragdoll and move it around. However, allowing this movement caused strange errors to appear, so we have disabled that feature in our project.</p>
+			
+		<h3 id="s4">Lessons</h3>
+		<p>This project was an excellent lesson in particle systems and how to use Verlet integration and relaxation to satisfy constraints in an articulated system. By implementing the simulation on top of the existing code we had, it also allowed us to more fully understand the scene graph, and the geometry and visitor classes. The numerous hours of debugging spent on this code also really drove home the importance of practicing good programming habits and using gdb. There are many features we have failed to implement in our system, but experiencing what problems came up gave us insight in what we would have needed to do to get it to work.</p>
+		
 		<div id="references">
 			<h2>References</h2>
 			<ul>
-				<li id="r1">[1] Footnote 1</li>
-				<li id="r2">[2] Footnote 2 yay</li>
+				<li id="r1">Jakobsen, Thomas. Advanced Character Physics. Gamasutra.com: 2003. <a href="http://www.gamasutra.com/resource_guide/20030121/jacobson_01.shtml">http://www.gamasutra.com/resource_guide/20030121/jacobson_01.shtml</a></li>
+				<li id="r2">Verlet Integration. Wikipedia.com: 2011. <a href="http://en.wikipedia.org/wiki/Verlet_integration">http://en.wikipedia.org/wiki/Verlet_integration</a></li>
 			</ul>
 		</div>
 

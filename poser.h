@@ -54,14 +54,7 @@ public:
     }
     
     else if(dot(newVec,newVec) > CS175_EPS2 && dot(oldVec,oldVec) > CS175_EPS2){
-      //Cvec3 changePos = newPos - oldPos;
-
-      //// update local RBT
-      //RigTForm newLocalRbt = node.getRbt();
-      //newLocalRbt.setTranslation(newLocalRbt.getTranslation());
-      //shared_ptr<SgRbtNode> rbtPtr = dynamic_pointer_cast<SgRbtNode>(node.shared_from_this());
-      //rbtPtr->setRbt(newLocalRbt);
-
+     
       newVec = newVec.normalize();
       oldVec = oldVec.normalize();
       normalVec = cross(oldVec, newVec);
@@ -77,9 +70,6 @@ public:
         myAccumRbt = parentAccumRbt * node.getRbt();
       }
     }
-
-    //assert(abs(dot(myAccumRbt.getTranslation() - newPos, myAccumRbt.getTranslation() - newPos)) < CS175_EPS);
-    //particles_[particleId].x_ = myAccumRbt.getTranslation();
 
     rbtStack_.push_back(parentAccumRbt);
     rbtStack_.push_back(myAccumRbt);
@@ -99,17 +89,17 @@ public:
     RigTForm newLocalRbt = currLocalRbt * newAccumRbt * inv(currAccumRbt);
 
     shared_ptr<SgRbtNode> rbtPtr = dynamic_pointer_cast<SgRbtNode>(node.shared_from_this());
-    //rbtPtr->getRbt().setRotation(newLocalRbt.getRotation());
     rbtPtr->setRbt(RigTForm(currLocalRbt.getTranslation(), newLocalRbt.getRotation()));
 
     return true;
   }
 
   virtual bool visit(SgShapeNode& shapeNode) {
-    // TODO: Shape vertex particles!
-    // for each vertex, should create a particle
-    // for each edge, should create a constraint
-
+    //shared_ptr<SgGeometryShapeNode> GeoPtr = 
+    //  dynamic_pointer_cast<SgGeometryShapeNode>(shapeNode.shared_from_this());
+    // //get number vertices
+    //int v = GeoPtr->getVertices();
+    //idCounter_ +=v;
     return true;
   }
 

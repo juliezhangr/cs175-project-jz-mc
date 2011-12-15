@@ -20,9 +20,13 @@ h3 {
 	color: blue;
 }
 
+strong {
+	color: black;
+}
+
 ul, ol {
   margin: 0;
-  list-style: none;
+  list-style: decimal;
 }
 
 li {
@@ -31,15 +35,21 @@ li {
 
 a { 
   color: #666; 
-  text-decoration: none;
 }
 
 a:hover { 
-  text-decoration: underline;
+  color: blue;
 }
 
 a img {
   border: none;
+}
+
+.left {
+	float: left;
+	margin: 10px 40px 20px 25px;
+	width: 256px;
+	display: inline-block;
 }
 
 img.left {
@@ -47,6 +57,13 @@ img.left {
   margin: 7px 20px 0 0;
   width: 256px;
   display: inline-block;
+}
+
+.right {
+	float: right;
+	width: 256px;
+	margin: 10px 25px 20px 40px;
+	display: inline-block;
 }
 
 img.right {
@@ -67,7 +84,6 @@ img.center {
 	background-color: #fff;
 	width: 900px;
 	margin: 0 auto;
-	padding: 20px;
 }
 
 /* Content */
@@ -75,10 +91,15 @@ img.center {
 #content {
   float: left;
   width: 860px;
+  padding: 20px 0 50px 0;
 }
 
 .imgtxt {
 	color: #999;
-	text-align: center justify;
-	margin: 5px 25px 5px 25px;
+	margin: 10px 25px 5px 25px;
+}
+
+p.imgtxt {
+	color: #999;
+	margin: 10px 0 0 0;
 }
